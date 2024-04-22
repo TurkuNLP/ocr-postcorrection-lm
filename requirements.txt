@@ -1,0 +1,13 @@
+#pip3.9 install -r requirements.txt
+
+wheel
+torch
+torchvision
+accelerate
+bitsandbytes
+nltk
+scikit-learn
+Transformers
+#flash_attn
+evaluate
+jiwer
