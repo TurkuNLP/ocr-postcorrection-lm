@@ -10,4 +10,6 @@ scikit-learn
 Transformers
 #flash_attn
 evaluate
+cer
 jiwer
+optuna

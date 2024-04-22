@@ -8,7 +8,7 @@
 
 module load pytorch
 
-source /scratch/project_2000539/jenna/venv-mixtral/bin/activate
+source ../.venv/bin/activate
 
 python run_lm.py --input by_page_test_slim_sub_sample.jsonl.gz --out mixtral_output.jsonl
 

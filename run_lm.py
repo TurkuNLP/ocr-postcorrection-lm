@@ -9,7 +9,6 @@ import gzip
 import unicodedata
 from eval_metrics import calculate_metrics
 
-
 print(transformers.__version__)
 print(bitsandbytes.__version__)
 
@@ -18,6 +17,7 @@ print(bitsandbytes.__version__)
 #0.42.0 (bitsandbytes)
 
 device = "cuda" # the device to load the model onto
+cache_dir = "/scratch/project_2005072/cassandra/.cache" # path to the cache dir where the models are
 
 def prepare_text_input(example):
     text = example["input"]
@@ -67,7 +67,7 @@ def main(args):
     print("Original scores:")
     print(original_metrics)
 
-    model, tokenizer = load_model(args.model, cache_dir="/scratch/project_2000539/jenna/hf-cache")
+    model, tokenizer = load_model(args.model, cache_dir=cache_dir)
     
     generated_outputs = []
     scores = []
