@@ -1,0 +1,8 @@
+NOTE: This module uses Apptainer (Singularity). Some commands execute inside
+the container (e.g. python3, pip3).
+
+usage: gridsearch.py [-h] [--input_file INPUT_FILE]
+                     [--output_file OUTPUT_FILE] [--model MODEL]
+                     [--max_examples MAX_EXAMPLES] [--ntrials NTRIALS]
+                     [--quantization QUANTIZATION]
+gridsearch.py: error: argument --quantization: expected one argument
