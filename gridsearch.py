@@ -26,7 +26,7 @@ parser.add_argument("--model", type=str, default="mistralai/Mixtral-8x7B-Instruc
 parser.add_argument("--max_examples", type=int, default=None, help="Maximum number of examples to process")
 parser.add_argument("--ntrials", type=int, default=5, help="Number of trials in the optune gridsearch")
 parser.add_argument("--quantization", type=int, default=4, help="Number of bits for quantization (4, 8, 16)")
-parser.add_argument("--batch_size", type=int, default=1, help="Set up a batch size for batched generation")
+parser.add_argument("--batch_size", type=int, default=1, help="Set up a batch size for batched generation") # this code does not really support batching right now
 args = parser.parse_args()
 
 device = "cuda" # the device to load the model onto
@@ -89,11 +89,14 @@ def load_model(model_name_or_path, cache_dir, quantization):
     tokenizer.pad_token = tokenizer.eos_token
     return model, tokenizer
 
-def sliding_window(tokens, prompt_size, window_size):
+def sliding_window(tokens, prompt_size, window_size, input_text):
     start = randint(prompt_size, max(prompt_size, tokens["input_ids"].size()[1] - window_size))
     truncated_tokens = tokens["input_ids"][:,start:start+window_size]
     truncated_attention_mask = tokens["attention_mask"][:,start:start+window_size]
-    return { "input_ids" : truncated_tokens.to(device), "attention_mask" : truncated_attention_mask.to(device)}
+    mapping = tokens["offset_mapping"][0]
+    truncated_text_start, truncated_text_end = mapping[start], mapping[start + window_size]
+    truncated_text = input_text[0][truncated_text_start:truncated_text_end]
+    return { "input_ids" : truncated_tokens.to(device), "attention_mask" : truncated_attention_mask.to(device)}, truncated_text
 
 def align(input_text, output_text):
     aligner = PairwiseAligner()
@@ -104,11 +107,12 @@ def align(input_text, output_text):
     alignment = alignments[0]
     return alignment
 
-def process_alignment(alignment):
-    align_str = str(alignment.split("\n"))
-    return align_str[0], align_str[1], align_str[2]
+#def process_alignment(alignment):
+ #   align_str = str(alignment.split("\n"))
+  #  return align_str[0], align_str[1], align_str[2]
 
-def extract_aligned_text(base_text, alignment_string, query_text):
+def extract_aligned_text(alignment):       #still in progress
+    base_text, alignment_string, query_text = str(alignment).split('\n')
     matches = list(re.finditer(r'\|+', alignment_string))
     refined_matches = []
 
@@ -150,8 +154,8 @@ def main():
         prompt_size = get_prompt_info(tokenizer)["prompt_token_size"]
         batch_size = args.batch_size 
         for batch in simple_batching(text_inputs, batch_size=batch_size):
-            raw_encoded = tokenizer(batch, return_tensors="pt", padding=True)
-            encoded = sliding_window(raw_encoded, prompt_size, window_size=window_size)
+            raw_encoded = tokenizer(batch, return_tensors="pt", return_offsets_mapping=True, padding=True)
+            encoded = sliding_window(raw_encoded, prompt_size, window_size=window_size, batch)
             generated_ids = model.generate(**encoded, max_new_tokens=2000, pad_token_id=tokenizer.eos_token_id, temperature=temperature, do_sample=do_sample, num_beams=num_beams)
             decoded = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
             for example in decoded:
@@ -161,13 +165,20 @@ def main():
                     generated = example
                 generated_outputs.append(generated)
 
-
-        # alignment
-
         # adjusted_start_index, _ = adjust_indices_to_token_boundaries(output_text, start_index, tokenizer)
         # adjusted_end_index, _ = adjust_indices_to_token_boundaries(output_text, end_index, tokenizer)
 
-        metrics = calculate_metrics(predictions=[item for item in generated_outputs], references=[item["output"] for item in examples])
+
+        # alignment of hypothesis and correct texts 
+        references=[]
+        for i in range(len(examples)):
+            alignment=align(input_text=examples[i]["output"], output_text=generated_outputs[i])
+            base_text, alignment_string, query_text = str(alignment).split('\n')
+            start, end = extract_aligned_text(base_text, alignment_string, query_text)
+            references.append(base_text[start:end].replace("-", ""))     #that probably has to be improved
+
+                
+        metrics = calculate_metrics(predictions=generated_outputs, references=references)
         huggingface_character_wer = float(metrics["character_wer"])
         return huggingface_character_wer
     
