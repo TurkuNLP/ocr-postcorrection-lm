@@ -1,6 +1,7 @@
 mkdir -p eo_gridsearch
 
 for i in 4 8 16
-do 
-    sbatch -e eo_gridsearch/$i.err -o eo_gridsearch/$i.out gridsearch.script
+do
+    for j in "mistralai/Mixtral-8x7B-Instruct-v0.1" "mistralai/Mixtral-8x22B-Instruct-v0.1" "Qwen/Qwen1.5-7B-Chat"
+    sbatch -e eo_gridsearch/$i.err -o eo_gridsearch/$i.out gridsearch.script $i $j
 done

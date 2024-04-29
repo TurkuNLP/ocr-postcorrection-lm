@@ -10,4 +10,4 @@ module load pytorch
 
 source ../../.venv/bin/activate
 
-python ../gridsearch.py --max_examples 10 --ntrials 10  --quantization $1
+python ../gridsearch.py --max_examples 10 --ntrials 10  --quantization $1 --model $2

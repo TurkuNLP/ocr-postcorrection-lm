@@ -12,6 +12,9 @@ import gzip
 import unicodedata
 from eval_metrics import calculate_metrics
 import optuna
+from Bio.Align import PairwiseAligner
+
+import re
 
 print("transformers version: ", transformers.__version__)
 print("bitsandybtes version: ", bitsandbytes.__version__)
@@ -29,7 +32,7 @@ args = parser.parse_args()
 device = "cuda" # the device to load the model onto
 cache_dir = '/scratch/project_2005072/ocr_correction/.cache'  # path to the cache dir where the models are
 
-def get_prompt_info():  
+def get_prompt_info(tokenizer):  
     if args.model == "mistralai/Mixtral-8x7B-Instruct-v0.1":
         instruction = """[INST] Correct the OCR errors in the text below. Also correct the "-" characters, which denote an unrecognized letter. Stay as close as possible to the original text. Do not rephrase. Only correct the errors. You will be rewarded.\n\n""" 
     else:
@@ -69,7 +72,6 @@ def read_data(fname, max_examples=None):
     return examples
 
 def load_model(model_name_or_path, cache_dir, quantization):
-
     if quantization==4:
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -88,51 +90,92 @@ def load_model(model_name_or_path, cache_dir, quantization):
     return model, tokenizer
 
 def sliding_window(tokens, prompt_size, window_size):
-    start = randint(prompt_size, tokens.size - window_size)
-    truncated_tokens = tokens[:,start:start+window_size]
-    return truncated_tokens
-    
-    
-def objective(trial):
-    window_size = trial.suggest_int('window_size', 10, 1000) 
-    temperature = trial.suggest_float('temperature', 0.7, 1.0) 
-    do_sample = trial.suggest_categorical('binary_sample', [True, False])
-    beam_search = trial.suggest_categorical('binary_beam', [True, False])
-    num_beams = trial.suggest_int('num_beams', 5) 
+    start = randint(prompt_size, max(prompt_size, tokens["input_ids"].size()[1] - window_size))
+    truncated_tokens = tokens["input_ids"][:,start:start+window_size]
+    truncated_attention_mask = tokens["attention_mask"][:,start:start+window_size]
+    return { "input_ids" : truncated_tokens.to(device), "attention_mask" : truncated_attention_mask.to(device)}
 
-    examples = read_data(args.input_file, max_examples=args.max_examples)
+def align(input_text, output_text):
+    aligner = PairwiseAligner()
+    aligner.mode = 'global'
+    aligner.target_end_gap_score = 0.0
+    aligner.query_end_gap_score = 0.0
+    alignments = aligner.align(input_text.replace("\n", ""), output_text.replace("\n", ""))
+    alignment = alignments[0]
+    return alignment
 
-    generated_outputs = []
-    text_inputs = [prepare_text_input(e) for e in examples] 
+def process_alignment(alignment):
+    align_str = str(alignment.split("\n"))
+    return align_str[0], align_str[1], align_str[2]
 
-    prompt_size = get_prompt_info()["prompt_token_size"]
-    batch_size = args.batch_size 
-    for batch in simple_batching(text_inputs, batch_size=batch_size):
-        raw_encoded = tokenizer(batch, return_tensors="pt", padding=True)
-        encoded = sliding_window(encoded, prompt_size, window_size=window_size)
-        print(encoded.size)
-        model_inputs = encoded.to(device)
-        generated_ids = model.generate(**model_inputs, max_new_tokens=2000, pad_token_id=tokenizer.eos_token_id, temperature=temperature, do_sample=do_sample, num_beams=num_beams)
-        decoded = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
-        for example in decoded:
-            if args.model =="mistralai/Mixtral-8x7B-Instruct-v0.1":
-                generated = example.split("[/INST]")[-1].strip() #TODO: hacky, check if generate() can be made to return only the generated part, or take the prompt length from inputs
-            else:
-                generated = example
-            generated_outputs.append(generated)
+def extract_aligned_text(base_text, alignment_string, query_text):
+    matches = list(re.finditer(r'\|+', alignment_string))
+    refined_matches = []
 
-     
-    metrics = calculate_metrics(predictions=[item for item in generated_outputs], references=[item["output"] for item in examples])
-    huggingface_character_wer = float(metrics["character_wer"])
-    return huggingface_character_wer
+    #checking if text checks out but that doesn't sound necessary. at least we make sure the alignment has been processed correctly
+    for match in matches:
+        start, end = match.start(), match.end()
+        if base_text[start:end] == query_text[start:end]:  
+            refined_matches.append(match)
+    if not refined_matches:
+        return ""  
+
+    last_match = max(refined_matches, key=lambda m: m.end())
+    first_match = min(refined_matches, key=lambda m: m.start())
+    start, end = first_match.start(), last_match.end()
+
+    #aligned_text = base_text[start:end]
+    return start, end 
+
+def adjust_indices_to_token_boundaries(original_text, index, tokenizer):
+    tokens = tokenizer.tokenize(original_text)
+    cumulative_length = 0
+    for token in tokens:
+        token_length = len(token.replace("##", ""))  # replace special tokens from tokenizer ? 
+        cumulative_length += token_length
+        if cumulative_length > index:
+            return original_text.index(token), token
+    return index, None  # in case the index is at the end of the text
 
 def main():
+    def objective(trial):
+        window_size = trial.suggest_int('window_size', 10, 1000) 
+        temperature = trial.suggest_float('temperature', 0.7, 1.0) 
+        do_sample = trial.suggest_categorical('do_sample', [True, False])
+        beam_search = trial.suggest_categorical('beam_search', [True, False])
+        num_beams = trial.suggest_int('num_beams', 2, 6) 
+        examples = read_data(args.input_file, max_examples=args.max_examples)
+        generated_outputs = []
+        text_inputs = [prepare_text_input(e) for e in examples] 
+        prompt_size = get_prompt_info(tokenizer)["prompt_token_size"]
+        batch_size = args.batch_size 
+        for batch in simple_batching(text_inputs, batch_size=batch_size):
+            raw_encoded = tokenizer(batch, return_tensors="pt", padding=True)
+            encoded = sliding_window(raw_encoded, prompt_size, window_size=window_size)
+            generated_ids = model.generate(**encoded, max_new_tokens=2000, pad_token_id=tokenizer.eos_token_id, temperature=temperature, do_sample=do_sample, num_beams=num_beams)
+            decoded = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+            for example in decoded:
+                if args.model =="mistralai/Mixtral-8x7B-Instruct-v0.1":
+                    generated = example.split("[/INST]")[-1].strip() #TODO: hacky, check if generate() can be made to return only the generated part, or take the prompt length from inputs
+                else:
+                    generated = example
+                generated_outputs.append(generated)
+
+
+        # alignment
+
+        # adjusted_start_index, _ = adjust_indices_to_token_boundaries(output_text, start_index, tokenizer)
+        # adjusted_end_index, _ = adjust_indices_to_token_boundaries(output_text, end_index, tokenizer)
+
+        metrics = calculate_metrics(predictions=[item for item in generated_outputs], references=[item["output"] for item in examples])
+        huggingface_character_wer = float(metrics["character_wer"])
+        return huggingface_character_wer
+    
     model, tokenizer = load_model(args.model, cache_dir, quantization=args.quantization)
     study = optuna.create_study(direction='minimize')
     study.optimize(objective, n_trials=args.ntrials)
     print('Best parameters:', study.best_params)
     print('Best CER:', study.best_value)
-
     for trial in study.trials:
         print(trial.value, trial.params)
 
