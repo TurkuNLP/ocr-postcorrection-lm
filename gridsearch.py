@@ -346,7 +346,7 @@ class Optimizer:
                 start, end = smoothing_window(base_text, alignment)
                 aligned_generated_outputs.append(base_text[start:end]) 
             except:
-                aligned_generated_outputs.append("error with alignment :" + alignment)
+                aligned_generated_outputs.append("error with alignment :" + str(alignment))
 
         references=[]
         for i in range(len(examples)):
@@ -364,7 +364,7 @@ class Optimizer:
                     end-=2 # if minimal score hasn't been touched . there must be a cleaner solution
                     references.append(base_text[start:end])  
                 except:
-                    references.append("error with alignment :" + alignment)
+                    references.append("error with alignment :" + str(alignment))
 
         aligned_inputs=[]
         for i in range(len(examples)):
@@ -383,7 +383,7 @@ class Optimizer:
                     end-=2    #same argument as above 
                     aligned_inputs.append(base_text[start:end])  
                 except:
-                    aligned_inputs.append("error with alignment :" + alignment)
+                    aligned_inputs.append("error with alignment :" + str(alignment))
                 
 
         try:
