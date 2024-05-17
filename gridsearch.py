@@ -32,26 +32,13 @@ args = parser.parse_args()
 
 device = "cuda" # the device to load the model onto
 cache_dir = '/scratch/project_2005072/ocr_correction/.cache'  # path to the cache dir where the models are
+access_token = "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"
 
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk)) #print stuff in red 
     
-def get_prompt_info(tokenizer):  # for now this is only used to get to know how long the prompt is in terms of token length to not cut it when slicing the text
-    if args.model == "mistralai/Mixtral-8x7B-Instruct-v0.1":
-        instruction = """[INST] Correct the OCR errors in the text below. Also correct the "-" characters, which denote an unrecognized letter. Stay as close as possible to the original text. Do not rephrase. Only correct the errors. You will be rewarded.\n\n""" 
-    else:
-        instruction = """ Correct the OCR errors in the text below. Also correct the "-" characters, which denote an unrecognized letter. Stay as close as possible to the original text. Do not rephrase. Only correct the errors. You will be rewarded.\n\n"""
-        
-    prompt_token_size = tokenizer.encode(instruction, return_tensors="pt").size()[1] 
-                                                                                     
-    return { "prompt_token_size" : prompt_token_size }
-
-
 def prepare_text_input(example):
     text = example["input"]
-    if args.model =="mistralai/Mixtral-8x7B-Instruct-v0.1":
-        prompt = f"""[INST] Correct the OCR errors in the text below. Also correct the "-" characters, which denote an unrecognized letter. Stay as close as possible to the original text. Do not rephrase. Only correct the errors. You will be rewarded.\n\n{text} [/INST]"""
-    else:
-        prompt = f""" Correct the OCR errors in the text below. Also correct the "-" characters, which denote an unrecognized letter. Stay as close as possible to the original text. Do not rephrase. Only correct the errors. You will be rewarded.\n\n{text}"""
+    prompt = f""" Correct the OCR errors in the text below. Also correct the "-" characters, which denote an unrecognized letter. Stay as close as possible to the original text. Do not rephrase. Only correct the errors. You will be rewarded.\n\n{text}"""
     return prompt
 
 def simple_batching(items, batch_size=5):
@@ -83,7 +70,7 @@ def load_model(model_name_or_path, cache_dir, quantization):
             bnb_4bit_compute_dtype=torch.float16,       
         )
 
-        model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", quantization_config=quantization_config, cache_dir=cache_dir)
+        model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", quantization_config=quantization_config, cache_dir=cache_dir, token=access_token)
         
     elif quantization==8:
         quantization_config = BitsAndBytesConfig(
@@ -92,27 +79,41 @@ def load_model(model_name_or_path, cache_dir, quantization):
             bnb_8bit_compute_dtype=torch.float16,       
         )
 
-        model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", quantization_config=quantization_config, cache_dir=cache_dir)
+        model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", quantization_config=quantization_config, cache_dir=cache_dir, token=access_token)
         
     else:
         print("Warning: Quantization number not found.Please use --quantization 4 or --quantization 8 if you want to use a quantized model. Loading full model")
-        model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", cache_dir=cache_dir)
-
+        model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", cache_dir=cache_dir, token=access_token)
     print("model loaded")
-    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, padding_side="left")
+    
+    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, padding_side="left", token=access_token)
     tokenizer.pad_token = tokenizer.eos_token
+    print("tokenizer loaded")
+
     return model, tokenizer
 
-def sliding_window(tokens, prompt_size, window_size, input_text): #cut a part of the input to see how the length of the input influences the ability of the model to correct. misleading function name
+def sliding_window(tokens, tokenizer, prompt_size, window_size): #cut a part of the input to see how the length of the input influences the ability of the model to correct. misleading function name
+    input_text = tokenizer.decode(tokens["input_ids"][0])
     start = randint(prompt_size, max(prompt_size, tokens["input_ids"].size()[1] - window_size))
-    end = min(start+window_size, tokens["input_ids"].size()[1]-1)
-    truncated_tokens = tokens["input_ids"][:,start:end]
-    truncated_attention_mask = tokens["attention_mask"][:,start:end]
-    mapping = tokens["offset_mapping"][0]
-    truncated_text_start, truncated_text_end = mapping[start][0], mapping[end][0]
-    truncated_text = input_text[0][truncated_text_start:truncated_text_end]
-    return { "input_ids" : truncated_tokens.to(device), "attention_mask" : truncated_attention_mask.to(device)}, truncated_text
+    end = min(start+window_size, tokens["input_ids"].size()[1]-2)
+    
+    test = tokenizer("<|eot_id|>", return_tensors="pt")
+    size_eot = test["input_ids"].size()[0]
+    #print(start, end, tokens["input_ids"].size()[1])
+    truncated_tokens = torch.cat((tokens["input_ids"][:,:prompt_size-1],tokens["input_ids"][:,start:end]), dim=1)
+    truncated_tokens = torch.cat((truncated_tokens,tokens["input_ids"][:,-size_eot:]), dim=1)
 
+    truncated_attention_mask = torch.cat((tokens["attention_mask"][:,:prompt_size-1],tokens["attention_mask"][:,start:end]), dim=1)
+    truncated_attention_mask = torch.cat((truncated_attention_mask,tokens["attention_mask"][:,-size_eot:]), dim=1)
+
+    mapping = tokens["offset_mapping"][0]
+    #print("size", mapping.size())
+    #print(mapping[start], mapping[end])
+    truncated_text_start, truncated_text_end = int(mapping[start][0]), int(mapping[end][0])
+    #print("n:", n, truncated_text_start-n, truncated_text_end-n)
+    truncated_text = input_text[truncated_text_start:truncated_text_end]
+    return { "input_ids" : truncated_tokens.to(device), "attention_mask" : truncated_attention_mask.to(device)}, truncated_text
+    
 def align(input_text, output_text): 
     aligner = PairwiseAligner()
     aligner.mode = 'global'
@@ -125,12 +126,7 @@ def align(input_text, output_text):
     alignment = alignments[0]
     return alignment
 
-#def process_alignment(alignment):
- #   align_str = str(alignment.split("\n"))
-  #  return align_str[0], align_str[1], align_str[2]
-
 def extract_aligned_text(text_for_extraction, alignment, with_indices=False, i_start=0, i_end=0):       #extract the matching part of the text based of alignment
-    #print(str(alignment).split('\n'))
     base_text, alignment_string, query_text = alignment[0], craft_alignment_string(alignment), alignment[1]
     
     if not with_indices:
@@ -145,7 +141,7 @@ def extract_aligned_text(text_for_extraction, alignment, with_indices=False, i_s
     character_start = base_text[start]
     character_end = base_text[end]
 
-    while character_start=="-":
+    while character_start=="-":               #not very clean but shortening the extract by removing "-" at the end or beginning
         character_start = base_text[start+1]
         start+=1
     character_end = base_text[end]
@@ -157,7 +153,7 @@ def extract_aligned_text(text_for_extraction, alignment, with_indices=False, i_s
     end_total = 0
 
     spaces_count_in_aligned = 0                    #taking into account the leading spaces added by the alignment (sometimes?)
-    for char in base_text.replace("-", ""):        #doesn't matter that we replace with nothing, it's temporary and we only look at the leading spaces
+    for char in base_text.replace("-", ""):        
         if char == ' ':
             spaces_count_in_aligned += 1
         else:
@@ -178,8 +174,6 @@ def extract_aligned_text(text_for_extraction, alignment, with_indices=False, i_s
     start_count, end_count = 0, 0
     index_start, index_end = 0, 0
 
-    #print("character_start:",character_start, "start_total:", start_total,
-     #     "character_end:", character_end, "end_total:", end_total)
     for i in range(len(text_for_extraction)):          #basically just counting how many times the characters appear to try and find the position it was in the original text based on rank
         if start_count==start_total&end_count==end_total:
             break
@@ -192,10 +186,9 @@ def extract_aligned_text(text_for_extraction, alignment, with_indices=False, i_s
                 start_count+=1
                 index_start=i
 
-    if end_count!=end_total:     #happens when the ending character is "-". we just then return the whole text. Should not happend anymore 
+    if end_count!=end_total:   
         index_end = -1
         
-    #aligned_text = base_text[index_start:index_end]
     return index_start, index_end 
 
 def find_longest_sequence_of_ones(smoothed_scores_list):  #gpt inspired function
@@ -221,10 +214,8 @@ def find_longest_sequence_of_ones(smoothed_scores_list):  #gpt inspired function
     if current_length > max_length:
         max_length = current_length
         best_start_index = start_index
-        best_end_index = len(data) - 1
+        best_end_index = len(smoothed_scores_list) - 1
 
-    #print(f"The longest sequence of 1s starts at index {best_start_index} and ends at index {best_end_index}.")
-    
     return best_start_index, best_end_index
 
 def craft_alignment_string(alignment):   #function to overcome formatting discrepancies
@@ -282,18 +273,26 @@ def normalize(text):
     text = " ".join(text.replace("\n", " ").split())
     return unicodedata.normalize("NFKC", text)
 
-
-
+def get_prompt_size(tokenizer):  # for now this is only used to get to know how long the prompt is in terms of token length to not cut it when slicing the text
+    messages = [
+        {"role": "system", "content": "You are a useful assistant"},
+        {"role": "user", "content": f""" Correct the OCR errors in the text below. Stay as close as possible to the original text. Do not rephrase. Only correct the errors. You will be rewarded.\n\n"""},
+    ]
+    encoded = tokenizer.apply_chat_template(messages, return_dict=True, return_tensors="pt").to(device)
+    prompt_token_size = encoded["input_ids"][0].size()[0]-1  # -1 to exclude the eot token
+                                                                                 
+    return prompt_token_size 
 
 class Optimizer:
     def __init__(self):
         self.model, self.tokenizer = load_model(args.model, cache_dir, quantization=args.quantization)
+        self.prompt_size = get_prompt_size(self.tokenizer)
 
     def objective(self, trial):
         window_size = trial.suggest_int('window_size', 10, 500) 
         do_sample = trial.suggest_categorical('do_sample', [True, False])
         temperature = None
-        beam_search = False      #reset to not get warnings
+        beam_search = False      #reset to not get warnings (doesn't actually prevent warnings, idk what to do about them)
         num_beams = None
         if do_sample:
             temperature = trial.suggest_float('temperature', 0, 1.0)
@@ -303,29 +302,36 @@ class Optimizer:
         examples = read_data(args.input_file, max_examples=args.max_examples)
         generated_outputs = []
         text_inputs = [prepare_text_input(e) for e in examples] 
-        prompt_size = get_prompt_info(self.tokenizer)["prompt_token_size"]
         batch_size = args.batch_size 
         timers=[]
+
+        truncated_inputs = []
         for batch in simple_batching(text_inputs, batch_size=batch_size):
             timer_start=dt.datetime.now()
-            raw_encoded = self.tokenizer(batch, return_tensors="pt", return_offsets_mapping=True, padding=True)
-            encoded, truncated_text = sliding_window(raw_encoded, prompt_size, window_size, batch)     
+
+            encoded_text_for_truncation = self.tokenizer
+            messages = [
+                {"role": "system", "content": "You are a useful assistant"},
+                {"role": "user", "content": batch[0]},
+            ]
+            raw_encoded = self.tokenizer.apply_chat_template(messages, return_offsets_mapping=True, return_dict=True,  return_tensors="pt").to(device)
+            encoded, truncated_text = sliding_window(raw_encoded, self.tokenizer, self.prompt_size, window_size)     
+            truncated_inputs.append(truncated_text)
             try:
                 temperature #trying out if the temperature var exists
                 if beam_search:
-                    generated_ids = self.model.generate(**encoded, max_new_tokens=2000, pad_token_id=self.tokenizer.eos_token_id, temperature=temperature, do_sample=do_sample, num_beams=num_beams, early_stopping=True)
+                    generated_ids = self.model.generate(**encoded, max_new_tokens=1.5*window_size, pad_token_id=self.tokenizer.eos_token_id, temperature=temperature, do_sample=do_sample, num_beams=num_beams, early_stopping=True)
                 else:
-                    generated_ids = self.model.generate(**encoded, max_new_tokens=2000, pad_token_id=self.tokenizer.eos_token_id, temperature=temperature, do_sample=do_sample)
+                    generated_ids = self.model.generate(**encoded, max_new_tokens=1.5*window_size, pad_token_id=self.tokenizer.eos_token_id, temperature=temperature, do_sample=do_sample)
             except:
-                generated_ids = self.model.generate(**encoded, max_new_tokens=2000, pad_token_id=self.tokenizer.eos_token_id, do_sample=do_sample)
+                generated_ids = self.model.generate(**encoded, max_new_tokens=1.5*window_size, pad_token_id=self.tokenizer.eos_token_id, do_sample=do_sample)
                     
                     
-            decoded = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+            decoded = self.tokenizer.batch_decode(generated_ids)
             for example in decoded:
-                if args.model =="mistralai/Mixtral-8x7B-Instruct-v0.1":
-                    generated = example.split("[/INST]")[-1].strip() #TODO: hacky, check if generate() can be made to return only the generated part, or take the prompt length from inputs
-                else:
-                    generated = example
+                #if "mistralai/Mixtral" in str(args.model):
+                generated = example.split("<|end_header_id|>")[-1].strip("<|eot_id|>") 
+                
                 generated_outputs.append(generated)
 
         # alignment of hypothesis and correct texts 
@@ -360,47 +366,75 @@ class Optimizer:
                     alignment = ""
                 try:
                     start, end = smoothing_window(base_text, alignment)
-                    start+=2
-                    end-=2 # if minimal score hasn't been touched . there must be a cleaner solution
                     references.append(base_text[start:end])  
                 except:
                     references.append("error with alignment :" + str(alignment))
 
-        aligned_inputs=[]
-        for i in range(len(examples)):
-            if "error with alignment" in references[i]:
-                aligned_inputs.append("error with alignment")
-            else:
-                base_text = normalize(examples[i]["input"])
-                try:
-                    alignment = align(input_text=base_text, output_text=references[i])
-                except:
-                    alignment = ""
-                try:
-                    
-                    start, end = smoothing_window(base_text, alignment)
-                    start+=2
-                    end-=2    #same argument as above 
-                    aligned_inputs.append(base_text[start:end])  
-                except:
-                    aligned_inputs.append("error with alignment :" + str(alignment))
+        #aligned_inputs=[]
+        #for i in range(len(examples)):
+         #   if "error with alignment" in references[i]:
+          #      aligned_inputs.append("error with alignment")
+           # else:
+            #    base_text = normalize(examples[i]["input"])
+             #   try:
+              #      alignment = align(input_text=base_text, output_text=references[i])
+               # except:
+                #    alignment = ""
+                #try:
+                 #   start, end = smoothing_window(base_text, alignment)
+                  #  aligned_inputs.append(base_text[start:end])  
+                #except:
+                 #   aligned_inputs.append("error with alignment :" + str(alignment))
                 
 
         try:
-            metrics = calculate_metrics(predictions=aligned_generated_outputs, references=references)
+            clean_ref, clean_output = [], []
+            penalty_count = 0
+            for i in range(len(references)):
+                if references[i]=="" or aligned_generated_outputs[i]=="":
+                    penalty_count += 1
+                    continue
+                else:
+                    clean_ref.append(references[i])
+                    clean_output.append(aligned_generated_outputs[i])
+                    
+            metrics = calculate_metrics(predictions=clean_output, references=clean_ref)
             huggingface_character_wer = float(metrics["character_wer"])
+
+            huggingface_character_wer = (huggingface_character_wer*len(clean_ref)+penalty_count)/len(references)
+            
         except:
             metrics = "undefined"
             huggingface_character_wer = 10
 
-        with open(args.output_file, "at", encoding="utf-8") as f:
+        filename = "_".join(str(args.output_file).split("/"))
+        
+        with open(filename, "at", encoding="utf-8") as f:
             for i in range(len(examples)):
                 al = align(input_text=examples[i]["output"], output_text=generated_outputs[i])
-                d = {"input": examples[i]["input"],  "reference": examples[i]["output"], "aligned_input": aligned_inputs[i],  "output": generated_outputs[i], "aligned_output": aligned_generated_outputs[i], "aligned_reference": references[i], "total tokens generated": nb_tokens, "time taken": timers[i], "scores": {"metrics": metrics, "hf_wer": huggingface_character_wer}, "alignment": {"base":al[0], "al_str":craft_alignment_string(al), "query":al[1]}, "parameters": trial.params}
+                d = {"originals": 
+                         {"whole_input": examples[i]["input"], 
+                          "reference": examples[i]["output"]},
+                     "truncated_input": truncated_inputs[i],    
+                     "output": generated_outputs[i], 
+                     "aligned_output": aligned_generated_outputs[i], 
+                     "aligned_reference": references[i], 
+                     "total characters generated": len(generated_outputs[i]), 
+                     "total tokens generated": nb_tokens, 
+                     "time taken": timers[i], 
+                     "scores": 
+                         {"metrics": metrics, 
+                          "hf_wer": huggingface_character_wer, 
+                          "percentage_found": len(aligned_generated_outputs[i])/len(truncated_inputs[i])}, 
+                    "alignment": 
+                         {"base":al[0], 
+                          "al_str":craft_alignment_string(al), 
+                          "query":al[1]}, 
+                     "parameters": trial.params}
                 
                 print(json.dumps(d, ensure_ascii=False), file=f)
         prRed("infos dumped")
-                
+        
         return huggingface_character_wer
 
 

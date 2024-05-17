@@ -7,10 +7,12 @@ accelerate
 bitsandbytes
 nltk
 scikit-learn
-Transformers
+Transformers==4.38.1
 #flash_attn
 evaluate
 cer
 jiwer
 optuna
 bio
+sentencepiece
+protobuf
