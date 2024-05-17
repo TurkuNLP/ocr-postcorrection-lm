@@ -32,7 +32,7 @@ args = parser.parse_args()
 
 device = "cuda" # the device to load the model onto
 cache_dir = '/scratch/project_2005072/ocr_correction/.cache'  # path to the cache dir where the models are
-access_token = "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"
+access_token = "xx"
 
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk)) #print stuff in red 
     
