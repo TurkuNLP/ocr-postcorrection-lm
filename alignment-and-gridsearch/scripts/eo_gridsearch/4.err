@@ -1,313 +1,0 @@
-NOTE: This module uses Apptainer (Singularity). Some commands execute inside
-the container (e.g. python3, pip3).
-
-NOTE: This module uses Apptainer (Singularity). Some commands execute inside
-the container (e.g. python3, pip3).
-
-NOTE: This module uses Apptainer (Singularity). Some commands execute inside
-the container (e.g. python3, pip3).
-
-NOTE: This module uses Apptainer (Singularity). Some commands execute inside
-the container (e.g. python3, pip3).
-
-NOTE: This module uses Apptainer (Singularity). Some commands execute inside
-the container (e.g. python3, pip3).
-
-NOTE: This module uses Apptainer (Singularity). Some commands execute inside
-the container (e.g. python3, pip3).
-NOTE: This module uses Apptainer (Singularity). Some commands execute inside
-the container (e.g. python3, pip3).
-
-
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/utils/_errors.py", line 304, in hf_raise_for_status
-    response.raise_for_status()
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/requests/models.py", line 1021, in raise_for_status
-    raise HTTPError(http_error_msg, response=self)
-requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/mistralai/Mixtral-8x22B-Instruct-v0.1/resolve/main/config.json
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/utils/hub.py", line 398, in cached_file
-    resolved_file = hf_hub_download(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/utils/_validators.py", line 119, in _inner_fn
-    return fn(*args, **kwargs)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 1403, in hf_hub_download
-    raise head_call_error
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 1261, in hf_hub_download
-    metadata = get_hf_file_metadata(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/utils/_validators.py", line 119, in _inner_fn
-    return fn(*args, **kwargs)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 1674, in get_hf_file_metadata
-    r = _request_wrapper(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 369, in _request_wrapper
-    response = _request_wrapper(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 393, in _request_wrapper
-    hf_raise_for_status(response)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/utils/_errors.py", line 321, in hf_raise_for_status
-    raise GatedRepoError(message, response) from e
-huggingface_hub.utils._errors.GatedRepoError: 401 Client Error. (Request ID: Root=1-66437561-518f13da025bcee57d6504dd;64a08520-9d52-4bc4-b5ac-04a28d05b154)
-
-Cannot access gated repo for url https://huggingface.co/mistralai/Mixtral-8x22B-Instruct-v0.1/resolve/main/config.json.
-Access to model mistralai/Mixtral-8x22B-Instruct-v0.1 is restricted. You must be authenticated to access it.
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 415, in <module>
-    main()
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 406, in main
-    optimizer = Optimizer()
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 290, in __init__
-    self.model, self.tokenizer = load_model(args.model, cache_dir, quantization=args.quantization)
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 86, in load_model
-    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", quantization_config=quantization_config, cache_dir=cache_dir)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/models/auto/auto_factory.py", line 523, in from_pretrained
-    config, kwargs = AutoConfig.from_pretrained(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/models/auto/configuration_auto.py", line 928, in from_pretrained
-    config_dict, unused_kwargs = PretrainedConfig.get_config_dict(pretrained_model_name_or_path, **kwargs)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/configuration_utils.py", line 631, in get_config_dict
-    config_dict, kwargs = cls._get_config_dict(pretrained_model_name_or_path, **kwargs)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/configuration_utils.py", line 686, in _get_config_dict
-    resolved_config_file = cached_file(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/utils/hub.py", line 416, in cached_file
-    raise EnvironmentError(
-OSError: You are trying to access a gated repo.
-Make sure to have access to it at https://huggingface.co/mistralai/Mixtral-8x22B-Instruct-v0.1.
-401 Client Error. (Request ID: Root=1-66437561-518f13da025bcee57d6504dd;64a08520-9d52-4bc4-b5ac-04a28d05b154)
-
-Cannot access gated repo for url https://huggingface.co/mistralai/Mixtral-8x22B-Instruct-v0.1/resolve/main/config.json.
-Access to model mistralai/Mixtral-8x22B-Instruct-v0.1 is restricted. You must be authenticated to access it.
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/utils/_errors.py", line 304, in hf_raise_for_status
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/utils/_errors.py", line 304, in hf_raise_for_status
-    response.raise_for_status()
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/requests/models.py", line 1021, in raise_for_status
-    response.raise_for_status()
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/requests/models.py", line 1021, in raise_for_status
-    raise HTTPError(http_error_msg, response=self)
-requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct/resolve/main/config.json
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/utils/hub.py", line 398, in cached_file
-    raise HTTPError(http_error_msg, response=self)
-requests.exceptions.HTTPError: 401 Client Error: Unauthorized for url: https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct/resolve/main/config.json
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/utils/hub.py", line 398, in cached_file
-    resolved_file = hf_hub_download(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/utils/_validators.py", line 119, in _inner_fn
-    resolved_file = hf_hub_download(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/utils/_validators.py", line 119, in _inner_fn
-    return fn(*args, **kwargs)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 1403, in hf_hub_download
-    return fn(*args, **kwargs)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 1403, in hf_hub_download
-    raise head_call_error
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 1261, in hf_hub_download
-    raise head_call_error
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 1261, in hf_hub_download
-    metadata = get_hf_file_metadata(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/utils/_validators.py", line 119, in _inner_fn
-    metadata = get_hf_file_metadata(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/utils/_validators.py", line 119, in _inner_fn
-    return fn(*args, **kwargs)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 1674, in get_hf_file_metadata
-    return fn(*args, **kwargs)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 1674, in get_hf_file_metadata
-    r = _request_wrapper(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 369, in _request_wrapper
-    response = _request_wrapper(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 393, in _request_wrapper
-    r = _request_wrapper(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 369, in _request_wrapper
-    hf_raise_for_status(response)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/utils/_errors.py", line 321, in hf_raise_for_status
-    response = _request_wrapper(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py", line 393, in _request_wrapper
-    raise GatedRepoError(message, response) from e
-huggingface_hub.utils._errors.GatedRepoError: 401 Client Error. (Request ID: Root=1-66437561-2b1ef5ff5e41aa7a6de09e00;09c40bd1-3c61-45b9-99e5-b5d6fe67ff1a)
-
-Cannot access gated repo for url https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct/resolve/main/config.json.
-Access to model meta-llama/Meta-Llama-3-70B-Instruct is restricted. You must be authenticated to access it.
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 415, in <module>
-    hf_raise_for_status(response)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/utils/_errors.py", line 321, in hf_raise_for_status
-    main()
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 406, in main
-    raise GatedRepoError(message, response) from e
-huggingface_hub.utils._errors.GatedRepoError: 401 Client Error. (Request ID: Root=1-66437561-24c1c6af514463b711c4bfc2;201a3586-0bb0-4138-8c3f-df24e5ad309c)
-
-Cannot access gated repo for url https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct/resolve/main/config.json.
-Access to model meta-llama/Meta-Llama-3-8B-Instruct is restricted. You must be authenticated to access it.
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 415, in <module>
-    optimizer = Optimizer()
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 290, in __init__
-    main()
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 406, in main
-    self.model, self.tokenizer = load_model(args.model, cache_dir, quantization=args.quantization)
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 86, in load_model
-    optimizer = Optimizer()
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 290, in __init__
-    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", quantization_config=quantization_config, cache_dir=cache_dir)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/models/auto/auto_factory.py", line 523, in from_pretrained
-    self.model, self.tokenizer = load_model(args.model, cache_dir, quantization=args.quantization)
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 86, in load_model
-    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", quantization_config=quantization_config, cache_dir=cache_dir)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/models/auto/auto_factory.py", line 523, in from_pretrained
-    config, kwargs = AutoConfig.from_pretrained(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/models/auto/configuration_auto.py", line 928, in from_pretrained
-    config, kwargs = AutoConfig.from_pretrained(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/models/auto/configuration_auto.py", line 928, in from_pretrained
-    config_dict, unused_kwargs = PretrainedConfig.get_config_dict(pretrained_model_name_or_path, **kwargs)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/configuration_utils.py", line 631, in get_config_dict
-    config_dict, unused_kwargs = PretrainedConfig.get_config_dict(pretrained_model_name_or_path, **kwargs)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/configuration_utils.py", line 631, in get_config_dict
-    config_dict, kwargs = cls._get_config_dict(pretrained_model_name_or_path, **kwargs)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/configuration_utils.py", line 686, in _get_config_dict
-    config_dict, kwargs = cls._get_config_dict(pretrained_model_name_or_path, **kwargs)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/configuration_utils.py", line 686, in _get_config_dict
-    resolved_config_file = cached_file(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/utils/hub.py", line 416, in cached_file
-    resolved_config_file = cached_file(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/utils/hub.py", line 416, in cached_file
-    raise EnvironmentError(
-OSError: You are trying to access a gated repo.
-Make sure to have access to it at https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct.
-401 Client Error. (Request ID: Root=1-66437561-2b1ef5ff5e41aa7a6de09e00;09c40bd1-3c61-45b9-99e5-b5d6fe67ff1a)
-
-Cannot access gated repo for url https://huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct/resolve/main/config.json.
-Access to model meta-llama/Meta-Llama-3-70B-Instruct is restricted. You must be authenticated to access it.
-    raise EnvironmentError(
-OSError: You are trying to access a gated repo.
-Make sure to have access to it at https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct.
-401 Client Error. (Request ID: Root=1-66437561-24c1c6af514463b711c4bfc2;201a3586-0bb0-4138-8c3f-df24e5ad309c)
-
-Cannot access gated repo for url https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct/resolve/main/config.json.
-Access to model meta-llama/Meta-Llama-3-8B-Instruct is restricted. You must be authenticated to access it.
-Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/19 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:12<00:37, 12.64s/it]Loading checkpoint shards:   5%|▌         | 1/19 [00:13<03:55, 13.10s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:27<00:27, 13.91s/it]Loading checkpoint shards:  11%|█         | 2/19 [00:26<03:43, 13.15s/it]Loading checkpoint shards:  16%|█▌        | 3/19 [00:42<03:55, 14.72s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:46<00:16, 16.45s/it]Loading checkpoint shards:  21%|██        | 4/19 [00:55<03:27, 13.81s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:59<00:00, 14.77s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:59<00:00, 14.78s/it]
-Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
-[I 2024-05-14 17:31:05,806] A new study created in memory with name: no-name-877279b8-7afe-4e34-81f7-b300b943800c
-Downloading shards:   0%|          | 0/4 [00:00<?, ?it/s]Downloading shards:   0%|          | 0/62 [00:00<?, ?it/s]Loading checkpoint shards:  26%|██▋       | 5/19 [01:11<03:23, 14.56s/it]Loading checkpoint shards:  32%|███▏      | 6/19 [01:28<03:22, 15.57s/it]Downloading shards:  75%|███████▌  | 3/4 [00:31<00:10, 10.59s/it]Loading checkpoint shards:  37%|███▋      | 7/19 [01:42<02:58, 14.86s/it]Loading checkpoint shards:  42%|████▏     | 8/19 [01:58<02:47, 15.26s/it]Downloading shards: 100%|██████████| 4/4 [00:52<00:00, 13.92s/it]Downloading shards: 100%|██████████| 4/4 [00:52<00:00, 13.17s/it]
-Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  47%|████▋     | 9/19 [02:12<02:29, 14.90s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:16<00:48, 16.16s/it]Loading checkpoint shards:  53%|█████▎    | 10/19 [02:27<02:15, 15.10s/it]Loading checkpoint shards:  58%|█████▊    | 11/19 [02:40<01:55, 14.38s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:30<00:30, 15.21s/it]Loading checkpoint shards:  63%|██████▎   | 12/19 [02:55<01:41, 14.54s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:48<00:16, 16.50s/it]Loading checkpoint shards:  68%|██████▊   | 13/19 [03:10<01:27, 14.66s/it]Loading checkpoint shards: 100%|██████████| 4/4 [01:00<00:00, 14.67s/it]Loading checkpoint shards: 100%|██████████| 4/4 [01:00<00:00, 15.15s/it]
-/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py:1003: UserWarning: Not enough free disk space to download the file. The expected file size is: 0.00 MB. The target location /users/ledinsca/.cache/huggingface/hub only has 0.00 MB free disk space.
-  warnings.warn(
-/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py:1003: UserWarning: Not enough free disk space to download the file. The expected file size is: 0.00 MB. The target location /users/ledinsca/.cache/huggingface/hub/models--01-ai--Yi-1.5-9B-Chat/blobs only has 0.00 MB free disk space.
-  warnings.warn(
-/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py:1003: UserWarning: Not enough free disk space to download the file. The expected file size is: 1.03 MB. The target location /users/ledinsca/.cache/huggingface/hub only has 0.00 MB free disk space.
-  warnings.warn(
-/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/huggingface_hub/file_download.py:1003: UserWarning: Not enough free disk space to download the file. The expected file size is: 1.03 MB. The target location /users/ledinsca/.cache/huggingface/hub/models--01-ai--Yi-1.5-9B-Chat/blobs only has 0.00 MB free disk space.
-  warnings.warn(
-You set `add_prefix_space`. The tokenizer needs to be converted from the slow tokenizers
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 415, in <module>
-    main()
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 406, in main
-    optimizer = Optimizer()
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 290, in __init__
-    self.model, self.tokenizer = load_model(args.model, cache_dir, quantization=args.quantization)
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 102, in load_model
-    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, padding_side="left")
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/models/auto/tokenization_auto.py", line 862, in from_pretrained
-    return tokenizer_class.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/tokenization_utils_base.py", line 2089, in from_pretrained
-    return cls._from_pretrained(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/tokenization_utils_base.py", line 2311, in _from_pretrained
-    tokenizer = cls(*init_inputs, **init_kwargs)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/models/llama/tokenization_llama_fast.py", line 124, in __init__
-    super().__init__(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/tokenization_utils_fast.py", line 102, in __init__
-    raise ValueError(
-ValueError: Cannot instantiate this tokenizer from a slow version. If it's based on sentencepiece, make sure you have sentencepiece installed.
-Loading checkpoint shards:  74%|███████▎  | 14/19 [03:26<01:14, 15.00s/it]Loading checkpoint shards:  79%|███████▉  | 15/19 [03:41<00:59, 14.97s/it]Loading checkpoint shards:  84%|████████▍ | 16/19 [03:57<00:45, 15.29s/it]Loading checkpoint shards:  89%|████████▉ | 17/19 [04:11<00:29, 14.90s/it]Loading checkpoint shards:  95%|█████████▍| 18/19 [04:25<00:14, 14.84s/it]Loading checkpoint shards: 100%|██████████| 19/19 [04:42<00:00, 15.43s/it]Loading checkpoint shards: 100%|██████████| 19/19 [04:42<00:00, 14.88s/it]
-[I 2024-05-14 17:34:48,929] A new study created in memory with name: no-name-91d01e4c-d944-4aff-809d-76f61cfb0a81
-Downloading shards:   2%|▏         | 1/62 [05:17<5:22:43, 317.44s/it]Downloading shards:   3%|▎         | 2/62 [06:19<2:47:16, 167.27s/it]Downloading shards:   5%|▍         | 3/62 [06:49<1:42:46, 104.52s/it]Downloading shards:   6%|▋         | 4/62 [10:02<2:14:48, 139.46s/it][W 2024-05-14 17:45:40,512] Trial 0 failed with parameters: {'window_size': 291, 'do_sample': True, 'temperature': 0.6970437641130517, 'beam_search': False} because of the following error: FileNotFoundError(2, 'No such file or directory').
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 196, in _run_trial
-    value_or_values = func(trial)
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 393, in objective
-    with open(args.output_file, "at", encoding="utf-8") as f:
-FileNotFoundError: [Errno 2] No such file or directory: 'gridout_4bit_Qwen/Qwen1.5-7B-Chat.jsonl'
-[W 2024-05-14 17:45:40,547] Trial 0 failed with value None.
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 415, in <module>
-    main()
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 408, in main
-    study.optimize(optimizer.objective, n_trials=args.ntrials)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/study.py", line 451, in optimize
-    _optimize(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 62, in _optimize
-    _optimize_sequential(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 159, in _optimize_sequential
-    frozen_trial = _run_trial(study, func, catch)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 247, in _run_trial
-    raise func_err
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 196, in _run_trial
-    value_or_values = func(trial)
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 393, in objective
-    with open(args.output_file, "at", encoding="utf-8") as f:
-FileNotFoundError: [Errno 2] No such file or directory: 'gridout_4bit_Qwen/Qwen1.5-7B-Chat.jsonl'
-Downloading shards:   8%|▊         | 5/62 [17:23<3:55:51, 248.28s/it]Downloading shards:  10%|▉         | 6/62 [32:26<7:19:21, 470.74s/it]Downloading shards:  11%|█▏        | 7/62 [33:43<5:13:37, 342.14s/it]Downloading shards:  13%|█▎        | 8/62 [34:56<3:50:46, 256.42s/it]Downloading shards:  15%|█▍        | 9/62 [38:44<3:38:43, 247.61s/it]Downloading shards:  16%|█▌        | 10/62 [40:04<2:49:47, 195.92s/it]Downloading shards:  18%|█▊        | 11/62 [42:31<2:33:47, 180.93s/it]Downloading shards:  19%|█▉        | 12/62 [43:42<2:02:55, 147.52s/it]Downloading shards:  21%|██        | 13/62 [44:45<1:39:25, 121.74s/it]Downloading shards:  23%|██▎       | 14/62 [45:48<1:23:06, 103.88s/it]Downloading shards:  24%|██▍       | 15/62 [46:57<1:13:11, 93.43s/it] Downloading shards:  26%|██▌       | 16/62 [49:11<1:21:08, 105.85s/it]Downloading shards:  27%|██▋       | 17/62 [50:14<1:09:37, 92.83s/it] Downloading shards:  29%|██▉       | 18/62 [51:46<1:07:56, 92.65s/it]Downloading shards:  31%|███       | 19/62 [53:37<1:10:16, 98.06s/it]Downloading shards:  32%|███▏      | 20/62 [1:00:41<2:17:11, 196.00s/it]Downloading shards:  34%|███▍      | 21/62 [1:02:47<1:59:38, 175.10s/it][W 2024-05-14 18:36:00,957] Trial 0 failed with parameters: {'window_size': 400, 'do_sample': False} because of the following error: FileNotFoundError(2, 'No such file or directory').
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 196, in _run_trial
-    value_or_values = func(trial)
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 393, in objective
-    with open(args.output_file, "at", encoding="utf-8") as f:
-FileNotFoundError: [Errno 2] No such file or directory: 'gridout_4bit_mistralai/Mixtral-8x7B-Instruct-v0.1.jsonl'
-[W 2024-05-14 18:36:00,991] Trial 0 failed with value None.
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 415, in <module>
-    main()
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 408, in main
-    study.optimize(optimizer.objective, n_trials=args.ntrials)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/study.py", line 451, in optimize
-    _optimize(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 62, in _optimize
-    _optimize_sequential(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 159, in _optimize_sequential
-    frozen_trial = _run_trial(study, func, catch)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 247, in _run_trial
-    raise func_err
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 196, in _run_trial
-    value_or_values = func(trial)
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 393, in objective
-    with open(args.output_file, "at", encoding="utf-8") as f:
-FileNotFoundError: [Errno 2] No such file or directory: 'gridout_4bit_mistralai/Mixtral-8x7B-Instruct-v0.1.jsonl'
-Downloading shards:  35%|███▌      | 22/62 [1:09:20<2:40:19, 240.48s/it]Downloading shards:  37%|███▋      | 23/62 [1:11:12<2:11:15, 201.94s/it]Downloading shards:  39%|███▊      | 24/62 [1:13:18<1:53:19, 178.94s/it]Downloading shards:  40%|████      | 25/62 [1:14:45<1:33:18, 151.32s/it]Downloading shards:  42%|████▏     | 26/62 [1:15:53<1:15:51, 126.44s/it]Downloading shards:  44%|████▎     | 27/62 [1:17:15<1:06:02, 113.21s/it]Downloading shards:  45%|████▌     | 28/62 [1:18:55<1:01:50, 109.13s/it]Downloading shards:  47%|████▋     | 29/62 [1:20:17<55:29, 100.90s/it]  Downloading shards:  48%|████▊     | 30/62 [1:35:32<3:04:05, 345.16s/it]Downloading shards:  50%|█████     | 31/62 [1:36:47<2:16:27, 264.10s/it]Downloading shards:  52%|█████▏    | 32/62 [1:38:33<1:48:21, 216.71s/it]Downloading shards:  53%|█████▎    | 33/62 [1:42:10<1:44:50, 216.90s/it]Downloading shards:  55%|█████▍    | 34/62 [1:43:13<1:19:36, 170.59s/it]Downloading shards:  56%|█████▋    | 35/62 [1:52:40<2:10:18, 289.59s/it]Downloading shards:  58%|█████▊    | 36/62 [2:02:40<2:45:53, 382.83s/it]Downloading shards:  60%|█████▉    | 37/62 [2:09:29<2:42:47, 390.71s/it]Downloading shards:  61%|██████▏   | 38/62 [2:10:32<1:56:52, 292.20s/it]Downloading shards:  63%|██████▎   | 39/62 [2:11:40<1:26:16, 225.05s/it]Downloading shards:  65%|██████▍   | 40/62 [2:12:46<1:04:57, 177.15s/it]Downloading shards:  66%|██████▌   | 41/62 [2:13:48<49:59, 142.81s/it]  Downloading shards:  68%|██████▊   | 42/62 [2:15:34<43:55, 131.75s/it]Downloading shards:  69%|██████▉   | 43/62 [2:22:11<1:06:56, 211.39s/it]Downloading shards:  71%|███████   | 44/62 [2:23:14<50:04, 166.90s/it]  Downloading shards:  73%|███████▎  | 45/62 [2:25:07<42:42, 150.72s/it]Downloading shards:  74%|███████▍  | 46/62 [2:26:10<33:09, 124.32s/it]Downloading shards:  76%|███████▌  | 47/62 [2:33:54<56:34, 226.29s/it]Downloading shards:  77%|███████▋  | 48/62 [2:51:09<1:49:24, 468.88s/it]Downloading shards:  79%|███████▉  | 49/62 [2:55:54<1:29:37, 413.69s/it]Downloading shards:  81%|████████  | 50/62 [2:58:12<1:06:12, 331.03s/it]Downloading shards:  82%|████████▏ | 51/62 [2:59:20<46:10, 251.86s/it]  Downloading shards:  84%|████████▍ | 52/62 [3:00:22<32:31, 195.16s/it]Downloading shards:  85%|████████▌ | 53/62 [3:03:34<29:07, 194.14s/it]Downloading shards:  87%|████████▋ | 54/62 [3:05:31<22:47, 170.95s/it]Downloading shards:  89%|████████▊ | 55/62 [3:06:34<16:09, 138.49s/it]Downloading shards:  90%|█████████ | 56/62 [3:20:25<34:38, 346.43s/it]Downloading shards:  92%|█████████▏| 57/62 [3:21:42<22:06, 265.40s/it]Downloading shards:  94%|█████████▎| 58/62 [3:22:44<13:37, 204.44s/it]Downloading shards:  95%|█████████▌| 59/62 [3:23:47<08:06, 162.06s/it]Downloading shards:  97%|█████████▋| 60/62 [3:28:50<06:48, 204.32s/it]Downloading shards:  98%|█████████▊| 61/62 [3:30:52<02:59, 179.58s/it]Downloading shards: 100%|██████████| 62/62 [3:31:36<00:00, 139.07s/it]Downloading shards: 100%|██████████| 62/62 [3:31:36<00:00, 204.79s/it]
-Traceback (most recent call last):
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 415, in <module>
-    main()
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 406, in main
-    optimizer = Optimizer()
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 290, in __init__
-    self.model, self.tokenizer = load_model(args.model, cache_dir, quantization=args.quantization)
-  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 86, in load_model
-    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", quantization_config=quantization_config, cache_dir=cache_dir)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/models/auto/auto_factory.py", line 563, in from_pretrained
-    return model_class.from_pretrained(
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/modeling_utils.py", line 3627, in from_pretrained
-    hf_quantizer.validate_environment(device_map=device_map)
-  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/quantizers/quantizer_bnb_4bit.py", line 86, in validate_environment
-    raise ValueError(
-ValueError: 
-                    Some modules are dispatched on the CPU or the disk. Make sure you have enough GPU RAM to fit the
-                    quantized model. If you want to dispatch the model on the CPU or the disk while keeping these modules
-                    in 32-bit, you need to set `llm_int8_enable_fp32_cpu_offload=True` and pass a custom `device_map` to
-                    `from_pretrained`. Check
-                    https://huggingface.co/docs/transformers/main/en/main_classes/quantization#offload-between-cpu-and-gpu
-                    for more details.
-                    
