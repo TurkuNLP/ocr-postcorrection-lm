@@ -1,0 +1,52 @@
+NOTE: This module uses Apptainer (Singularity). Some commands execute inside
+the container (e.g. python3, pip3).
+
+NOTE: This module uses Apptainer (Singularity). Some commands execute inside
+the container (e.g. python3, pip3).
+
+Traceback (most recent call last):
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 438, in <module>
+    main()
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 429, in main
+    optimizer = Optimizer()
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 291, in __init__
+    self.model, self.tokenizer = load_model(args.model, cache_dir, quantization=args.quantization)
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 76, in load_model
+    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", quantization_config=quantization_config, cache_dir=cache_dir, token=access_token)
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/models/auto/auto_factory.py", line 561, in from_pretrained
+    return model_class.from_pretrained(
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/modeling_utils.py", line 3452, in from_pretrained
+    hf_quantizer.validate_environment(device_map=device_map)
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/quantizers/quantizer_bnb_4bit.py", line 86, in validate_environment
+    raise ValueError(
+ValueError: 
+                    Some modules are dispatched on the CPU or the disk. Make sure you have enough GPU RAM to fit the
+                    quantized model. If you want to dispatch the model on the CPU or the disk while keeping these modules
+                    in 32-bit, you need to set `load_in_8bit_fp32_cpu_offload=True` and pass a custom `device_map` to
+                    `from_pretrained`. Check
+                    https://huggingface.co/docs/transformers/main/en/main_classes/quantization#offload-between-cpu-and-gpu
+                    for more details.
+                    
+Traceback (most recent call last):
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 438, in <module>
+    main()
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 429, in main
+    optimizer = Optimizer()
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 291, in __init__
+    self.model, self.tokenizer = load_model(args.model, cache_dir, quantization=args.quantization)
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 85, in load_model
+    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", quantization_config=quantization_config, cache_dir=cache_dir, token=access_token)
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/models/auto/auto_factory.py", line 561, in from_pretrained
+    return model_class.from_pretrained(
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/modeling_utils.py", line 3452, in from_pretrained
+    hf_quantizer.validate_environment(device_map=device_map)
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/quantizers/quantizer_bnb_8bit.py", line 86, in validate_environment
+    raise ValueError(
+ValueError: 
+                    Some modules are dispatched on the CPU or the disk. Make sure you have enough GPU RAM to fit the
+                    quantized model. If you want to dispatch the model on the CPU or the disk while keeping these modules
+                    in 32-bit, you need to set `load_in_8bit_fp32_cpu_offload=True` and pass a custom `device_map` to
+                    `from_pretrained`. Check
+                    https://huggingface.co/docs/transformers/main/en/main_classes/quantization#offload-between-cpu-and-gpu
+                    for more details.
+                    

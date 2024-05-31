@@ -1,0 +1,51 @@
+NOTE: This module uses Apptainer (Singularity). Some commands execute inside
+the container (e.g. python3, pip3).
+
+NOTE: This module uses Apptainer (Singularity). Some commands execute inside
+the container (e.g. python3, pip3).
+
+Traceback (most recent call last):
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 438, in <module>
+    main()
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 429, in main
+    optimizer = Optimizer()
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 291, in __init__
+    self.model, self.tokenizer = load_model(args.model, cache_dir, quantization=args.quantization)
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 85, in load_model
+    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", quantization_config=quantization_config, cache_dir=cache_dir, token=access_token)
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/models/auto/auto_factory.py", line 561, in from_pretrained
+    return model_class.from_pretrained(
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/modeling_utils.py", line 3452, in from_pretrained
+    hf_quantizer.validate_environment(device_map=device_map)
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/quantizers/quantizer_bnb_8bit.py", line 86, in validate_environment
+    raise ValueError(
+ValueError: 
+                    Some modules are dispatched on the CPU or the disk. Make sure you have enough GPU RAM to fit the
+                    quantized model. If you want to dispatch the model on the CPU or the disk while keeping these modules
+                    in 32-bit, you need to set `load_in_8bit_fp32_cpu_offload=True` and pass a custom `device_map` to
+                    `from_pretrained`. Check
+                    https://huggingface.co/docs/transformers/main/en/main_classes/quantization#offload-between-cpu-and-gpu
+                    for more details.
+                    
+Loading checkpoint shards:   0%|          | 0/19 [00:00<?, ?it/s]Loading checkpoint shards:   5%|▌         | 1/19 [00:18<05:40, 18.92s/it]Loading checkpoint shards:  11%|█         | 2/19 [00:33<04:37, 16.35s/it]Loading checkpoint shards:  16%|█▌        | 3/19 [00:48<04:12, 15.81s/it]Loading checkpoint shards:  21%|██        | 4/19 [01:05<04:05, 16.34s/it]Loading checkpoint shards:  26%|██▋       | 5/19 [01:26<04:10, 17.86s/it]Loading checkpoint shards:  32%|███▏      | 6/19 [01:40<03:35, 16.57s/it]Loading checkpoint shards:  37%|███▋      | 7/19 [01:58<03:25, 17.14s/it]Loading checkpoint shards:  42%|████▏     | 8/19 [02:12<02:56, 16.02s/it]Loading checkpoint shards:  47%|████▋     | 9/19 [02:25<02:31, 15.18s/it]Loading checkpoint shards:  53%|█████▎    | 10/19 [02:40<02:15, 15.08s/it]Loading checkpoint shards:  58%|█████▊    | 11/19 [02:54<01:57, 14.69s/it]Loading checkpoint shards:  63%|██████▎   | 12/19 [03:06<01:38, 14.06s/it]Loading checkpoint shards:  68%|██████▊   | 13/19 [03:20<01:23, 13.88s/it]Loading checkpoint shards:  74%|███████▎  | 14/19 [03:39<01:16, 15.38s/it]Loading checkpoint shards:  79%|███████▉  | 15/19 [03:57<01:04, 16.13s/it]Loading checkpoint shards:  84%|████████▍ | 16/19 [04:21<00:55, 18.64s/it]Loading checkpoint shards:  89%|████████▉ | 17/19 [04:41<00:37, 18.99s/it]Loading checkpoint shards:  95%|█████████▍| 18/19 [04:58<00:18, 18.32s/it]Loading checkpoint shards: 100%|██████████| 19/19 [05:15<00:00, 18.10s/it]Loading checkpoint shards: 100%|██████████| 19/19 [05:15<00:00, 16.62s/it]
+Traceback (most recent call last):
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 438, in <module>
+    main()
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 429, in main
+    optimizer = Optimizer()
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 292, in __init__
+    self.prompt_size = get_prompt_size(self.tokenizer)
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 284, in get_prompt_size
+    encoded = tokenizer.apply_chat_template(messages, return_dict=True, return_tensors="pt").to(device)
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/tokenization_utils_base.py", line 1745, in apply_chat_template
+    rendered = compiled_template.render(
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "<template>", line 1, in top-level template code
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/jinja2/sandbox.py", line 393, in call
+    return __context.call(__obj, *args, **kwargs)
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/tokenization_utils_base.py", line 1790, in raise_exception
+    raise TemplateError(message)
+jinja2.exceptions.TemplateError: Conversation roles must alternate user/assistant/user/assistant/...

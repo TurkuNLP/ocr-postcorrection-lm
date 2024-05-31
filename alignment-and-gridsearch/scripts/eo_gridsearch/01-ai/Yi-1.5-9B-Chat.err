@@ -1,0 +1,31 @@
+NOTE: This module uses Apptainer (Singularity). Some commands execute inside
+the container (e.g. python3, pip3).
+
+NOTE: This module uses Apptainer (Singularity). Some commands execute inside
+the container (e.g. python3, pip3).
+
+Downloading shards:   0%|          | 0/4 [00:00<?, ?it/s]Downloading shards:   0%|          | 0/4 [00:00<?, ?it/s]Downloading shards:  25%|██▌       | 1/4 [00:00<00:00,  5.63it/s]Downloading shards:  25%|██▌       | 1/4 [00:00<00:00,  6.78it/s]Downloading shards:  50%|█████     | 2/4 [00:00<00:00,  5.22it/s]Downloading shards:  50%|█████     | 2/4 [00:00<00:00,  3.42it/s]Downloading shards:  75%|███████▌  | 3/4 [00:00<00:00,  5.23it/s]Downloading shards:  75%|███████▌  | 3/4 [00:00<00:00,  4.30it/s]Downloading shards: 100%|██████████| 4/4 [00:00<00:00,  5.25it/s]Downloading shards: 100%|██████████| 4/4 [00:00<00:00,  5.32it/s]
+Downloading shards: 100%|██████████| 4/4 [00:00<00:00,  5.02it/s]Downloading shards: 100%|██████████| 4/4 [00:00<00:00,  4.65it/s]
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:18<00:56, 18.80s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:19<00:58, 19.63s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:38<00:38, 19.20s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:39<00:38, 19.49s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [01:05<00:22, 22.99s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [01:06<00:23, 23.22s/it]Loading checkpoint shards: 100%|██████████| 4/4 [01:15<00:00, 17.65s/it]Loading checkpoint shards: 100%|██████████| 4/4 [01:15<00:00, 18.81s/it]
+Loading checkpoint shards: 100%|██████████| 4/4 [01:16<00:00, 17.73s/it]Loading checkpoint shards: 100%|██████████| 4/4 [01:16<00:00, 19.00s/it]
+You set `add_prefix_space`. The tokenizer needs to be converted from the slow tokenizers
+You set `add_prefix_space`. The tokenizer needs to be converted from the slow tokenizers
+[I 2024-05-16 22:58:36,480] A new study created in memory with name: no-name-dae320fb-c3c4-4002-8bb6-ece32122413c
+[I 2024-05-16 22:58:36,580] A new study created in memory with name: no-name-71d43ac9-f747-436c-b8e1-3d7b23fb1be5
+[I 2024-05-16 23:23:10,153] Trial 0 finished with value: 0.03792073965560257 and parameters: {'window_size': 215, 'do_sample': False}. Best is trial 0 with value: 0.03792073965560257.
+[I 2024-05-16 23:37:30,279] Trial 1 finished with value: 0.03995050131113111 and parameters: {'window_size': 133, 'do_sample': False}. Best is trial 0 with value: 0.03792073965560257.
+[I 2024-05-17 00:06:10,964] Trial 2 finished with value: 0.03549678839547086 and parameters: {'window_size': 264, 'do_sample': False}. Best is trial 2 with value: 0.03549678839547086.
+[I 2024-05-17 00:12:18,540] Trial 3 finished with value: 0.04173914084361566 and parameters: {'window_size': 54, 'do_sample': True, 'temperature': 0.3184299982352373, 'beam_search': False}. Best is trial 2 with value: 0.03549678839547086.
+[I 2024-05-17 00:58:05,057] Trial 4 finished with value: 0.03420365213518756 and parameters: {'window_size': 446, 'do_sample': False}. Best is trial 4 with value: 0.03420365213518756.
+[I 2024-05-17 01:32:56,218] Trial 5 finished with value: 0.03580532970092582 and parameters: {'window_size': 334, 'do_sample': False}. Best is trial 4 with value: 0.03420365213518756.
+[I 2024-05-17 02:19:32,592] Trial 6 finished with value: 0.034319187561249735 and parameters: {'window_size': 431, 'do_sample': True, 'temperature': 0.27867840385946774, 'beam_search': False}. Best is trial 4 with value: 0.03420365213518756.
+[I 2024-05-17 02:22:48,459] Trial 0 finished with value: 0.035798983954034296 and parameters: {'window_size': 283, 'do_sample': True, 'temperature': 0.7512363057896073, 'beam_search': True, 'num_beams': 5}. Best is trial 0 with value: 0.035798983954034296.
+[I 2024-05-17 02:37:06,413] Trial 7 finished with value: 0.03825546879995986 and parameters: {'window_size': 160, 'do_sample': True, 'temperature': 0.8252782546506492, 'beam_search': False}. Best is trial 4 with value: 0.03420365213518756.
+[I 2024-05-17 03:01:07,021] Trial 8 finished with value: 0.03991020270529341 and parameters: {'window_size': 221, 'do_sample': False}. Best is trial 4 with value: 0.03420365213518756.
+[I 2024-05-17 03:49:06,569] Trial 9 finished with value: 0.03455232191625911 and parameters: {'window_size': 452, 'do_sample': False}. Best is trial 4 with value: 0.03420365213518756.
+[I 2024-05-17 06:00:22,879] Trial 10 finished with value: 0.03752538852027972 and parameters: {'window_size': 489, 'do_sample': True, 'temperature': 0.971343586828551, 'beam_search': True, 'num_beams': 6}. Best is trial 4 with value: 0.03420365213518756.
+[I 2024-05-17 06:32:51,169] Trial 11 finished with value: 0.032476621172108665 and parameters: {'window_size': 391, 'do_sample': True, 'temperature': 0.0008358395058981061, 'beam_search': False}. Best is trial 11 with value: 0.032476621172108665.
+[I 2024-05-17 07:30:20,076] Trial 1 finished with value: 0.03392639217448431 and parameters: {'window_size': 445, 'do_sample': True, 'temperature': 0.09159181477697165, 'beam_search': True, 'num_beams': 2}. Best is trial 1 with value: 0.03392639217448431.
+[I 2024-05-17 07:47:46,179] Trial 12 finished with value: 0.033445349637342796 and parameters: {'window_size': 354, 'do_sample': True, 'temperature': 0.014088574909271652, 'beam_search': True, 'num_beams': 2}. Best is trial 11 with value: 0.032476621172108665.
+slurmstepd: error: *** JOB 21623855 ON r18g03 CANCELLED AT 2024-05-17T08:52:43 DUE TO TIME LIMIT ***
+slurmstepd: error: *** JOB 21623861 ON r16g06 CANCELLED AT 2024-05-17T08:52:43 DUE TO TIME LIMIT ***

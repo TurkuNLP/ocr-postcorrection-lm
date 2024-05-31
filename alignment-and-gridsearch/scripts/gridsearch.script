@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH --job-name=grid-search
+#SBATCH --account=project_2005072
+#SBATCH --time=48:00:00
+#SBATCH --mem-per-cpu=40G
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:v100:1
+
+module load pytorch
+
+source ../../.venv/bin/activate
+
+python ../gridsearch.py --max_examples 50 --ntrials 250  --quantization $1 --model $2 --output_file higher_temp_we_gridout_$1bit_$2.jsonl

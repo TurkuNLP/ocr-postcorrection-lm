@@ -1,0 +1,106 @@
+NOTE: This module uses Apptainer (Singularity). Some commands execute inside
+the container (e.g. python3, pip3).
+
+NOTE: This module uses Apptainer (Singularity). Some commands execute inside
+the container (e.g. python3, pip3).
+
+Downloading shards:   0%|          | 0/4 [00:00<?, ?it/s]Downloading shards:   0%|          | 0/4 [00:00<?, ?it/s]Downloading shards:  25%|██▌       | 1/4 [00:00<00:00,  5.81it/s]Downloading shards:  25%|██▌       | 1/4 [00:00<00:00,  6.89it/s]Downloading shards:  50%|█████     | 2/4 [00:00<00:00,  5.33it/s]Downloading shards:  50%|█████     | 2/4 [00:00<00:00,  6.81it/s]Downloading shards:  75%|███████▌  | 3/4 [00:00<00:00,  5.45it/s]Downloading shards:  75%|███████▌  | 3/4 [00:00<00:00,  6.79it/s]Downloading shards: 100%|██████████| 4/4 [00:00<00:00,  5.39it/s]Downloading shards: 100%|██████████| 4/4 [00:00<00:00,  5.42it/s]
+Downloading shards: 100%|██████████| 4/4 [00:00<00:00,  6.37it/s]Downloading shards: 100%|██████████| 4/4 [00:00<00:00,  6.53it/s]
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:15<00:46, 15.41s/it]Loading checkpoint shards:  25%|██▌       | 1/4 [00:15<00:46, 15.50s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:29<00:28, 14.45s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:29<00:28, 14.49s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:42<00:13, 13.92s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:42<00:13, 13.94s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:45<00:00,  9.67s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:45<00:00, 11.41s/it]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:45<00:00,  9.64s/it]Loading checkpoint shards: 100%|██████████| 4/4 [00:45<00:00, 11.41s/it]
+[I 2024-05-30 11:02:26,696] A new study created in memory with name: no-name-bc87c60f-8275-4466-8bfc-264901fb8503
+[I 2024-05-30 11:02:26,696] A new study created in memory with name: no-name-7dbab742-994b-4f71-a303-cc32e1797f21
+/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/generation/configuration_utils.py:415: UserWarning: `do_sample` is set to `False`. However, `top_p` is set to `0.9` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `top_p`.
+  warnings.warn(
+[I 2024-05-30 11:36:01,710] Trial 0 finished with value: 0.2785090443927725 and parameters: {'window_size': 60, 'do_sample': True, 'temperature': 8.65581202474808, 'beam_search': True, 'num_beams': 3}. Best is trial 0 with value: 0.2785090443927725.
+/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/transformers/generation/configuration_utils.py:415: UserWarning: `do_sample` is set to `False`. However, `top_p` is set to `0.9` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `top_p`.
+  warnings.warn(
+[I 2024-05-30 11:55:54,255] Trial 1 finished with value: 0.32191607527095123 and parameters: {'window_size': 20, 'do_sample': False}. Best is trial 0 with value: 0.2785090443927725.
+[I 2024-05-30 12:02:36,759] Trial 0 finished with value: 0.3256003966708199 and parameters: {'window_size': 16, 'do_sample': False}. Best is trial 0 with value: 0.3256003966708199.
+[I 2024-05-30 12:07:01,570] Trial 2 finished with value: 0.14948523424295143 and parameters: {'window_size': 94, 'do_sample': False}. Best is trial 2 with value: 0.14948523424295143.
+[I 2024-05-30 12:24:34,296] Trial 3 finished with value: 0.22840059361331325 and parameters: {'window_size': 29, 'do_sample': False}. Best is trial 2 with value: 0.14948523424295143.
+[I 2024-05-30 12:40:40,562] Trial 4 finished with value: 10.0 and parameters: {'window_size': 36, 'do_sample': False}. Best is trial 2 with value: 0.14948523424295143.
+[I 2024-05-30 12:46:48,035] Trial 1 finished with value: 0.2134653667077128 and parameters: {'window_size': 40, 'do_sample': False}. Best is trial 1 with value: 0.2134653667077128.
+[I 2024-05-30 13:16:52,221] Trial 2 finished with value: 0.15533296104826114 and parameters: {'window_size': 96, 'do_sample': False}. Best is trial 2 with value: 0.15533296104826114.
+[I 2024-05-30 13:25:07,218] Trial 5 finished with value: 0.29730091240171796 and parameters: {'window_size': 29, 'do_sample': True, 'temperature': 4.341098614112986, 'beam_search': True, 'num_beams': 5}. Best is trial 2 with value: 0.14948523424295143.
+[W 2024-05-30 13:45:12,970] Trial 6 failed with parameters: {'window_size': 12, 'do_sample': True, 'temperature': 9.860402983062123, 'beam_search': False} because of the following error: ValueError('sequence has zero length').
+Traceback (most recent call last):
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 196, in _run_trial
+    value_or_values = func(trial)
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 468, in objective
+    al = align(input_text=base_texts[i], output_text=generated_outputs[i])
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 167, in align
+    alignments = aligner.align(input_text.replace("\n", " "), output_text.replace("\n", " "))
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/Bio/Align/__init__.py", line 3926, in align
+    score, paths = super().align(sA, sB, strand)
+ValueError: sequence has zero length
+[W 2024-05-30 13:45:13,023] Trial 6 failed with value None.
+Traceback (most recent call last):
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 506, in <module>
+    main()
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 499, in main
+    study.optimize(optimizer.objective, n_trials=args.ntrials)
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/study.py", line 451, in optimize
+    _optimize(
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 62, in _optimize
+    _optimize_sequential(
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 159, in _optimize_sequential
+    frozen_trial = _run_trial(study, func, catch)
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 247, in _run_trial
+    raise func_err
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 196, in _run_trial
+    value_or_values = func(trial)
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 468, in objective
+    al = align(input_text=base_texts[i], output_text=generated_outputs[i])
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 167, in align
+    alignments = aligner.align(input_text.replace("\n", " "), output_text.replace("\n", " "))
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/Bio/Align/__init__.py", line 3926, in align
+    score, paths = super().align(sA, sB, strand)
+ValueError: sequence has zero length
+[I 2024-05-30 13:48:37,225] Trial 3 finished with value: 0.16690819983489105 and parameters: {'window_size': 84, 'do_sample': False}. Best is trial 2 with value: 0.15533296104826114.
+[I 2024-05-30 14:49:39,282] Trial 4 finished with value: 0.30676225291329795 and parameters: {'window_size': 17, 'do_sample': False}. Best is trial 2 with value: 0.15533296104826114.
+[I 2024-05-30 15:22:21,458] Trial 5 finished with value: 0.16061942233343676 and parameters: {'window_size': 86, 'do_sample': False}. Best is trial 2 with value: 0.15533296104826114.
+[I 2024-05-30 16:05:13,300] Trial 6 finished with value: 0.19491355726773094 and parameters: {'window_size': 48, 'do_sample': False}. Best is trial 2 with value: 0.15533296104826114.
+[I 2024-05-30 17:04:58,368] Trial 7 finished with value: 0.37114881579293657 and parameters: {'window_size': 71, 'do_sample': True, 'temperature': 8.543760001779608, 'beam_search': True, 'num_beams': 2}. Best is trial 2 with value: 0.15533296104826114.
+[I 2024-05-30 17:51:14,919] Trial 8 finished with value: 0.2568461046018082 and parameters: {'window_size': 46, 'do_sample': True, 'temperature': 1.4176352058164654, 'beam_search': False}. Best is trial 2 with value: 0.15533296104826114.
+[I 2024-05-30 18:56:41,839] Trial 9 finished with value: 0.7740530982178707 and parameters: {'window_size': 11, 'do_sample': False}. Best is trial 2 with value: 0.15533296104826114.
+[I 2024-05-30 19:37:58,535] Trial 10 finished with value: 0.1410794179283021 and parameters: {'window_size': 100, 'do_sample': True, 'temperature': 0.2036660763370044, 'beam_search': True, 'num_beams': 6}. Best is trial 10 with value: 0.1410794179283021.
+[I 2024-05-30 20:20:06,860] Trial 11 finished with value: 0.15413092064963912 and parameters: {'window_size': 98, 'do_sample': True, 'temperature': 0.23485715147070774, 'beam_search': True, 'num_beams': 6}. Best is trial 10 with value: 0.1410794179283021.
+[I 2024-05-30 21:02:32,401] Trial 12 finished with value: 0.14023611044868248 and parameters: {'window_size': 100, 'do_sample': True, 'temperature': 0.24024541980515313, 'beam_search': True, 'num_beams': 6}. Best is trial 12 with value: 0.14023611044868248.
+[I 2024-05-30 21:57:30,344] Trial 13 finished with value: 0.18402081027862208 and parameters: {'window_size': 67, 'do_sample': True, 'temperature': 2.7990321412037233, 'beam_search': True, 'num_beams': 6}. Best is trial 12 with value: 0.14023611044868248.
+[I 2024-05-30 23:00:36,635] Trial 14 finished with value: 0.48655934170722 and parameters: {'window_size': 82, 'do_sample': True, 'temperature': 4.982180918886211, 'beam_search': True, 'num_beams': 6}. Best is trial 12 with value: 0.14023611044868248.
+[I 2024-05-30 23:50:09,184] Trial 15 finished with value: 0.14800249967639523 and parameters: {'window_size': 68, 'do_sample': True, 'temperature': 0.3782231201489378, 'beam_search': True, 'num_beams': 4}. Best is trial 12 with value: 0.14023611044868248.
+[W 2024-05-31 00:22:59,459] Trial 16 failed with parameters: {'window_size': 100, 'do_sample': True, 'temperature': 3.9924896295409305, 'beam_search': False} because of the following error: ValueError('sequence has zero length').
+Traceback (most recent call last):
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 196, in _run_trial
+    value_or_values = func(trial)
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 468, in objective
+    al = align(input_text=base_texts[i], output_text=generated_outputs[i])
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 167, in align
+    alignments = aligner.align(input_text.replace("\n", " "), output_text.replace("\n", " "))
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/Bio/Align/__init__.py", line 3926, in align
+    score, paths = super().align(sA, sB, strand)
+ValueError: sequence has zero length
+[W 2024-05-31 00:22:59,496] Trial 16 failed with value None.
+Traceback (most recent call last):
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 506, in <module>
+    main()
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 499, in main
+    study.optimize(optimizer.objective, n_trials=args.ntrials)
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/study.py", line 451, in optimize
+    _optimize(
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 62, in _optimize
+    _optimize_sequential(
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 159, in _optimize_sequential
+    frozen_trial = _run_trial(study, func, catch)
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 247, in _run_trial
+    raise func_err
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/optuna/study/_optimize.py", line 196, in _run_trial
+    value_or_values = func(trial)
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 468, in objective
+    al = align(input_text=base_texts[i], output_text=generated_outputs[i])
+  File "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/scripts/../gridsearch.py", line 167, in align
+    alignments = aligner.align(input_text.replace("\n", " "), output_text.replace("\n", " "))
+  File "/scratch/project_2005072/cassandra/.venv/lib64/python3.9/site-packages/Bio/Align/__init__.py", line 3926, in align
+    score, paths = super().align(sA, sB, strand)
+ValueError: sequence has zero length
