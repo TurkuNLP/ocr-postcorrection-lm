@@ -17,6 +17,7 @@ import datetime as dt
 import re
 import traceback
 import logging
+import alignment.utils as astral 
 
 logging.getLogger('transformers').setLevel(logging.ERROR) ## in order to disable """A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.""", which in our case does not hold.
 
@@ -156,160 +157,9 @@ def sliding_window(tokens, tokenizer, prompt_size, window_size): #cut a part of 
     
     return { "input_ids" : truncated_tokens.to(device), "attention_mask" : truncated_attention_mask.to(device)}, truncated_text
     
-def align(input_text, output_text): 
-    aligner = PairwiseAligner()
-    aligner.mode = 'global'
-    aligner.target_end_gap_score = 0.0
-    aligner.query_end_gap_score = 0.0
-    aligner.open_gap_score = -1  
-    aligner.extend_gap_score = -0.5 # trying out stuff
-    
-    alignments = aligner.align(input_text.replace("\n", " "), output_text.replace("\n", " "))
-    alignment = alignments[0]
-    return alignment
-
-def extract_aligned_text(text_for_extraction, alignment, with_indices=False, i_start=0, i_end=0):       #extract the matching part of the text based of alignment
-    base_text, alignment_string, query_text = alignment[0], craft_alignment_string(alignment), alignment[1]
-    
-    if not with_indices:
-        matches = list(re.finditer(r'\|+', alignment_string))
-        
-        last_match = max(matches, key=lambda m: m.end())
-        first_match = min(matches, key=lambda m: m.start())
-        start, end = first_match.start(), last_match.end()
-    elif with_indices:
-        start, end = i_start, i_end
-
-    character_start = base_text[start]
-    character_end = base_text[end]
-
-    while character_start=="-":               #not very clean but shortening the extract by removing "-" at the end or beginning
-        character_start = base_text[start+1]
-        start+=1
-    character_end = base_text[end]
-    while character_end=="-":
-        character_end = base_text[end-1]
-        end-=1
-        
-    start_total = 0
-    end_total = 0
-
-    spaces_count_in_aligned = 0                    #taking into account the leading spaces added by the alignment (sometimes?)
-    for char in base_text.replace("-", ""):        
-        if char == ' ':
-            spaces_count_in_aligned += 1
-        else:
-            break
-
-    spaces_count_in_extraction_text = 0
-    for char in text_for_extraction:
-        if char == ' ':
-            spaces_count_in_extraction_text += 1
-        else:
-            break
-
-    diff = spaces_count_in_aligned - spaces_count_in_extraction_text
-
-    start_total = base_text[diff:start+1].count(character_start)  #trying to get the rank of a character
-    end_total = base_text[diff:end+1].count(character_end)    
-        
-    start_count, end_count = 0, 0
-    index_start, index_end = 0, 0
-
-    for i in range(len(text_for_extraction)):          #basically just counting how many times the characters appear to try and find the position it was in the original text based on rank
-        if start_count==start_total&end_count==end_total:
-            break
-        if end_count<end_total:
-            if text_for_extraction[i]==character_end:
-                end_count+=1
-                index_end=i
-        if start_count<start_total:
-            if text_for_extraction[i]==character_start:
-                start_count+=1
-                index_start=i
-
-    if end_count!=end_total:   
-        index_end = -1
-        
-    return index_start, index_end 
-
-def find_longest_sequence_of_ones(smoothed_scores_list):  #gpt inspired function
-    max_length = 0
-    current_length = 0
-    start_index = 0
-    best_start_index = -1
-    best_end_index = -1
-    
-    for i, value in enumerate(smoothed_scores_list):
-        if value == 1:
-            if current_length == 0:
-                start_index = i 
-            current_length += 1
-        else:
-            if current_length > max_length:
-                max_length = current_length
-                best_start_index = start_index
-                best_end_index = i - 1
-            current_length = 0
-
-    #check if the longest sequence ends at the last element
-    if current_length > max_length:
-        max_length = current_length
-        best_start_index = start_index
-        best_end_index = len(smoothed_scores_list) - 1
-
-    return best_start_index, best_end_index
-
-def craft_alignment_string(alignment):   #function to overcome formatting discrepancies
-    aligned_sequence1 = alignment[0]
-    aligned_sequence2 = alignment[1]
-    
-    alignment_string=""
-    
-    for idx, char in enumerate(aligned_sequence1):
-        if char==aligned_sequence2[idx]:
-            alignment_string+="|"
-        elif char=="-" or aligned_sequence2[idx]=="-":
-            alignment_string+="-"
-        else:
-            alignment_string+="."
-
-    return alignment_string
 
 
-def smoothing_window(text_for_extraction, alignment, smoothing_range=10, minimal_score=0.8):  #averaging the surrounding scores to try and spot the "dense" places of alignment
-    base_text, alignment_string, query_text = alignment[0], craft_alignment_string(alignment), alignment[1]
 
-    n = len(alignment_string)
-    left_side_smoothing_scores = [0 for i in range(n)]
-    right_side_smoothing_scores = [0 for i in range(n)]
-
-    #going from left to right
-    for i in range(n):
-        window = alignment_string[i-smoothing_range:i]
-        score = window.count("|")/smoothing_range
-        left_side_smoothing_scores[i] = score
-
-    #going from right to left 
-    for i in reversed(range(n)):
-        window = alignment_string[i:i+smoothing_range]
-        score = window.count("|")/smoothing_range
-        right_side_smoothing_scores[i] = score
-
-    smoothed_scores = [max(left_side_smoothing_scores[i], right_side_smoothing_scores[i]) for i in range(n)]
-    is_good_enough = []
-    for elt in smoothed_scores:
-        if elt>=minimal_score:
-            is_good_enough.append(1)
-        else:
-            is_good_enough.append(0)
-
-    start_smooth_alignment, end_smooth_alignment = find_longest_sequence_of_ones(is_good_enough)
-
-    #extracting the text for evaluation
-    start, end = extract_aligned_text(text_for_extraction, alignment, with_indices=True, i_start=start_smooth_alignment, i_end=end_smooth_alignment)
-
-    return start, end
 
 def normalize(text):
     text = " ".join(text.replace("\n", " ").split())
@@ -331,13 +181,13 @@ class Optimizer:
         self.prompt_size = get_prompt_size(self.tokenizer)
 
     def objective(self, trial):
-        window_size = trial.suggest_int('window_size', 10, 100) 
+        window_size = trial.suggest_int('window_size', 10, 600) 
         do_sample = trial.suggest_categorical('do_sample', [True, False])
         temperature = None
         beam_search = False      #reset to not get warnings (doesn't actually prevent warnings, idk what to do about them)
         num_beams = None
         if do_sample:
-            temperature = trial.suggest_float('temperature', 0.0, 10.0)
+            temperature = trial.suggest_float('temperature', 0.0, 2.0)
             beam_search = trial.suggest_categorical('beam_search', [True, False])
             if beam_search:
                 num_beams = trial.suggest_int('num_beams', 2, 6) 
@@ -399,6 +249,7 @@ class Optimizer:
                     
             decoded = self.tokenizer.batch_decode(generated_ids)
             for example in decoded:
+                prRed(example)
                 #if "mistralai/Mixtral" in str(args.model):
                 generated = example.split("<|end_header_id|>")[-1].strip("<|eot_id|>") 
                 
@@ -415,11 +266,11 @@ class Optimizer:
             base_text = normalize(generated_outputs[i])
             try:
                 n = len(normalize(examples[reference_numbers[i]]["input"]))
-                alignment = align(input_text=base_text, output_text=normalize(examples[reference_numbers[i]]["input"])) ## 'input' more realistic than 'output'
+                alignment = astral.align(input_text=base_text, output_text=normalize(examples[reference_numbers[i]]["input"])) ## 'input' more realistic than 'output'
             except:
                 alignment = ""
             try:
-                start, end = smoothing_window(base_text, alignment)
+                start, end = astral.smoothing_window(base_text, alignment)
                 aligned_generated_outputs.append(base_text[start:end]) 
             except:
                 aligned_generated_outputs.append("error with alignment :" + str(alignment))
@@ -432,11 +283,11 @@ class Optimizer:
                 references.append("error with alignment")
             else:
                 try:
-                    alignment = align(input_text=base_text, output_text=aligned_generated_outputs[i]) 
+                    alignment = astral.align(input_text=base_text, output_text=aligned_generated_outputs[i]) 
                 except:
                     alignment = ""
                 try:
-                    start, end = smoothing_window(base_text, alignment)
+                    start, end = astral.smoothing_window(base_text, alignment)
                     references.append(base_text[start:end])  
                 except:
                     references.append("error with alignment :" + str(alignment))
@@ -465,7 +316,11 @@ class Optimizer:
 
         with open(filename, "at", encoding="utf-8") as f:
             for i in range(len(messages_input)):
-                al = align(input_text=base_texts[i], output_text=generated_outputs[i])
+                try:
+                    al = astral.align(input_text=base_texts[i], output_text=generated_outputs[i])
+                except:
+                    al = "  "
+                    
                 d = {"originals": 
                          {"whole_input": examples[reference_numbers[i]]["input"], 
                           "reference": examples[reference_numbers[i]]["output"]},
@@ -482,16 +337,14 @@ class Optimizer:
                           "percentage_found": len(aligned_generated_outputs[i])/len(base_texts[i])}, 
                     "alignment": 
                          {"base":al[0], 
-                          "al_str":craft_alignment_string(al), 
-                          "query":al[1]}, 
+                          "al_str": astral.craft_alignment_string(al), 
+                          "query": al[1]}, 
                      "parameters": trial.params}
                 
                 print(json.dumps(d, ensure_ascii=False), file=f)
         prRed("infos dumped")
         
         return huggingface_character_wer
-
-
 
 def main():
     optimizer = Optimizer()
@@ -505,21 +358,4 @@ def main():
 if __name__ == '__main__': 
     main()
 
-
-
- #aligned_inputs=[]
-        #for i in range(len(examples)):
-         #   if "error with alignment" in references[i]:
-          #      aligned_inputs.append("error with alignment")
-           # else:
-            #    base_text = normalize(examples[i]["input"])
-             #   try:
-              #      alignment = align(input_text=base_text, output_text=references[i])
-               # except:
-                #    alignment = ""
-                #try:
-                 #   start, end = smoothing_window(base_text, alignment)
-                  #  aligned_inputs.append(base_text[start:end])  
-                #except:
-                 #   aligned_inputs.append("error with alignment :" + str(alignment))
                 

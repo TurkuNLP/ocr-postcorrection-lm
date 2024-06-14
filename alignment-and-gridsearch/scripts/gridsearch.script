@@ -8,6 +8,6 @@
 
 module load pytorch
 
-source ../../.venv/bin/activate
+source /scratch/project_2005072/cassandra/.venv/bin/activate
 
-python ../gridsearch.py --max_examples 50 --ntrials 250  --quantization $1 --model $2 --output_file higher_temp_we_gridout_$1bit_$2.jsonl
+python3.9 ../gridsearch.py --max_examples 50 --ntrials 250  --quantization $1 --model $2 --output_file higher_temp_we_gridout_$1bit_$2_v2.jsonl
