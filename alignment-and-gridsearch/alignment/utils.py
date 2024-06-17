@@ -315,46 +315,5 @@ def craft_alignment_string(alignment):
 
 
 if __name__=="__main__":
-    import torch
-    import transformers
-    import bitsandbytes
-    from transformers import AutoModelForCausalLM, AutoTokenizer
-    from transformers import BitsAndBytesConfig
-
-    device = "cuda" # the device to load the model onto
-    cache_dir = '/scratch/project_2005072/ocr_correction/.cache'  # path to the cache dir where the models are
-    with open("huggingface_key.txt", "r") as f:
-        access_token = f.readline()
-
-    model_name_or_path = "meta-llama/Meta-Llama-3-8B-Instruct" 
-    quantization_config = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=torch.float16,       
-            )
-    
-    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, device_map="auto", quantization_config=quantization_config, cache_dir=cache_dir, token=access_token)
-    tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, padding_side="left", token=access_token)
-    tokenizer.pad_token = tokenizer.eos_token  
-
-    test = correct("""When, .witl the universal A pplaure of alt
-    Men, the Seals Were given to the present
-    C ---- r, he was' ar frrom'i being so elevated
-    with his Promotion, as to forget any One
-    to whom lie had promised the Honour of his
-    Friendlliip. An Opportunity soon offered
-    in Favour of Dr R----, the B---k ox G----r
-    became vacant, .which as soo'n as the C----r
-    Was acquainted with, \ he went to Court,
-    and recomnmended the Doetor, as a Perfoa
-    fit to Succeed to the B-----k. The DoAos
-    was then approved of, and a C---'E---
-    order'd out accordingly. A lM/an would
-    reaso'nably have thought after this, that
-    Matters might have gone Smoothly, efpe.
-    cially as it is partly the Right of every new
-    C--- r, to' recommend a fit Person to his
-    M .------, to' fill the See that shall becom'
-    eax¢ant after ihs comiig to the Seals.""", model=model, tokenizer=tokenizer)
-    print(test)
+    None
     
