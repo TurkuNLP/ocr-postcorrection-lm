@@ -1,8 +1,11 @@
-from Bio import pairwise2
+from Bio.Align import PairwiseAligner
+
+from langchain_community.chat_models import ChatOllama
+from langchain.schema import HumanMessage
 
 import difflib
 from collections import defaultdict
-import unidecode
+from datetime import datetime
 
 import re
 
@@ -10,28 +13,34 @@ import logging
 logging.getLogger('transformers').setLevel(logging.ERROR) ## in order to disable """A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.""", which in our case does not hold.
 
 
-def correct(text, model=None, tokenizer=None):
+def correct(text, model=None, tokenizer=None, ollama=False):
     window_size = 300 ###TODO replace window size with best number
     prompts, texts, reference_numbers = prepare_text_input(text, tokenizer, slicing = True, window_size = window_size) 
     generated_outputs = []
 
     for index, prompt in enumerate(prompts):
-        model_output = run_lm(model, tokenizer, prompt, window_size)
+        gen_time = datetime.now()
+        if ollama:
+            model_output = run_ollama(model, [prompt])[0]
+        else:
+            model_output = run_lm(model, tokenizer, prompt, window_size)
+        gen_time = round((datetime.now()-gen_time).total_seconds(), 1)
+        print("generation time = ", gen_time, "seconds for", len(model_output), "characters")
         normalized_output = suppress_format(model_output)
         normalized_input = suppress_format(texts[index])
-        print(model_output)
-        print(texts[index])
-        print("9")
         alignment = align(normalized_input["text"], normalized_output["text"])
-        print("10")
+
+        print(alignment[0])
         alignment_string = craft_alignment_string(alignment)
-        
+        print(alignment_string)
+        print(alignment[1])
         start, end = extract_aligned_text(normalized_output, alignment[1], alignment_string)
+        
         aligned_output = model_output[start:end]
         generated_outputs.append(aligned_output)
     print(len(generated_outputs), "outputs have been generated.\nMerging...")
-
-    
+    print(generated_outputs)
+    shen_time = datetime.now()
     for i in range(3-len(generated_outputs)%3):
         generated_outputs.append("")
 
@@ -48,9 +57,19 @@ def correct(text, model=None, tokenizer=None):
             corrected_text = weighted_merge(str1, str2, str3)
             temp.append(corrected_text)
         corrected_texts = temp
-
+    shen_time = round((datetime.now()-shen_time).total_seconds(), 1)
+    print("processes other than generations took ", shen_time, "seconds.")
     return corrected_texts
     
+
+def run_ollama(model, prompts):
+    ollama = ChatOllama(model=model, temperature=0.8)
+    prompts = [ [HumanMessage(content=prompt)] for prompt in prompts]
+    print("started generating")
+    results = ollama.generate(prompts)
+    print("done with generation")
+    return [ result[0].text for result in results.generations ]
+
 
 def get_prompt_size(tokenizer):  # for now this is only used to get to know how long the prompt is in terms of token length to not cut it when slicing the text
     device="cuda"
@@ -82,12 +101,11 @@ def prepare_text_input(input, tokenizer, slicing=False, window_size=100):
         mapping = tokenized_text["offset_mapping"]
         number_of_slices = max(1, n//window_size)
         
-        if number_of_slices > 1 :
-            number_of_slices-=1
+        #if number_of_slices > 1 :
+         #   number_of_slices-=1       only for window size evaluation
         
         for i in range(number_of_slices):
             print('i', i)
-            
             try:
                 text = input[int(mapping[0][i*window_size][0]):int(mapping[0][(i+1)*window_size][0])]
             except:
@@ -103,11 +121,10 @@ def prepare_text_input(input, tokenizer, slicing=False, window_size=100):
 
 ### run the llm to correct
 def run_lm(model, tokenizer, prompt, window_size):
-    print("3")
     device="cuda"
     messages = [
         {"role": "system", "content": "You are a useful assistant"},
-        {"role": "user", "content": f""" Correct the OCR errors in the text below. Stay as close as possible to the original text. Do not rephrase. Only correct the errors. You will be rewarded.\n\n{prompt}"""},
+        {"role": "user", "content": prompt},
     ]
     prompt_size = get_prompt_size(tokenizer)
     encoded = tokenizer.apply_chat_template(messages, return_dict=True,  return_tensors="pt", max_length = int(1.5*(prompt_size+window_size))).to(device)
@@ -184,7 +201,7 @@ def weighted_merge(str1, str2, str3):
 
     return ''.join(final_string)
 
-### MATCH SCORES
+### MATCH SCORES (only used with pairwise2)
 def match(l,r):
     if l=="s" and r=="ſ":
         return 1
@@ -196,10 +213,16 @@ def match(l,r):
         return 0
 
 ### BASE ALIGNMENT
-def align(input_text, output_text): 
-    alignments = pairwise2.align.globalcs(input_text, output_text, match, open=-2, extend=-1, gap_char=" ") 
+def align(input_text, output_text):
+    aligner = PairwiseAligner()
+    aligner.mode = 'global'
+    aligner.target_end_gap_score = 0.0
+    aligner.query_end_gap_score = 0.0
+    aligner.open_gap_score = -1
+    aligner.extend_gap_score = -0.5 # trying out stuff
+    alignments = aligner.align(input_text, output_text)
     alignment = alignments[0]
-    
+    alignment = [alignment[0].replace("-", " "), alignment[1].replace("-", " ")]
     return alignment
 
 ### STORE THE INDICES OF FORMATTING CHARACTERS
@@ -207,25 +230,23 @@ def mapping_format(input_text):
     spaces = []
     new_lines = []
     words = []
-    ascii_characters = []
+    dashes = []
 
     for index, char in enumerate(input_text):
         if char==" ":
             spaces.append(index)
         elif char=="\n":
             new_lines.append(index)
+        elif char=="-":
+            dashes.append(index)
         else:
             words.append(index)
-            try:
-                ascii_characters.append(unidecode.unidecode(char)[0])
-            except:
-                ascii_characters.append("-")
                    
     map = {
         "spaces": spaces,
         "new_lines": new_lines,
         "words": words,
-        "ascii_char": ascii_characters,
+        "dashes": dashes
     }
     
     return map
@@ -233,19 +254,19 @@ def mapping_format(input_text):
 
 def suppress_format(input_text):   # delete spaces and newlines and provide a mapping of the original format for reversibility
     map = mapping_format(input_text)
-    #new_text = input_text.replace("\n", "").replace(" ", "")
-    new_text = ''.join(map["ascii_char"])
-    return {"map": map, "text": new_text}
+    text = input_text.replace("\n", "").replace(" ", "").replace("-", "")
+    return {"map": map, "text": text}
 
 def revert_to_original_format(input_text, map): # does the opposite of the function above
-    length = len(map["spaces"]) + len(map["new_lines"]) + len(map["words"])
+    length = len(map["spaces"]) + len(map["new_lines"]) + len(map["dashes"]) + len(map["words"])
     text = [None for i in range(length)]
     
     for elt in map["spaces"]:
         text[elt]= " "
     for elt in map["new_lines"]:
         text[elt] = "\n"
-
+    for elt in map["dashes"]:
+        text[elt] = "-"
     for idx, elt in enumerate(map["words"]):
         text[elt] = input_text[idx]
 
@@ -262,10 +283,8 @@ def extract_aligned_text(normalized_text, aligned_text, alignment_string):
         
     last_match = max(matches, key=lambda m: m.end())
     first_match = min(matches, key=lambda m: m.start())
-    word_start, word_end = first_match.start(), last_match.end()
-
+    word_start, word_end = first_match.start(), last_match.end()-1     # -1 here because the .end() is the first index not included, i.e. can can be out of bounds.
     new_word_start, new_word_end = word_start, word_end
-    
     for index, char in enumerate(aligned_text[:word_end+1]):      #tricky for-loop to recalibrate indices according to the alignment gaps (" ")
         if char==" ":
             new_word_end-=1
@@ -304,7 +323,8 @@ if __name__=="__main__":
 
     device = "cuda" # the device to load the model onto
     cache_dir = '/scratch/project_2005072/ocr_correction/.cache'  # path to the cache dir where the models are
-    access_token = "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"
+    with open("huggingface_key.txt", "r") as f:
+        access_token = f.readline()
 
     model_name_or_path = "meta-llama/Meta-Llama-3-8B-Instruct" 
     quantization_config = BitsAndBytesConfig(

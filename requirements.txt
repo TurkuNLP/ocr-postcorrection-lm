@@ -16,3 +16,4 @@ optuna
 bio
 sentencepiece
 protobuf
+langchain_community
