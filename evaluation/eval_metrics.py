@@ -7,7 +7,11 @@ wer_metric = load("wer")
 cer_metric = load("cer")
 character_metric = load("character")
 
-def normalize(text):
+def normalize(text: str, lowercase=False):
+
+    if lowercase:
+        return unicodedata.normalize("NFKC", text.casefold())
+
     return unicodedata.normalize("NFKC", text)
 
 def calculate_metrics(*, predictions, references, metric='cer'):
