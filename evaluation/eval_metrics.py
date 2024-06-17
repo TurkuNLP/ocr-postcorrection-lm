@@ -14,10 +14,10 @@ def normalize(text: str, lowercase=False):
 
     return unicodedata.normalize("NFKC", text)
 
-def calculate_metrics(*, predictions, references, metric='cer'):
+def calculate_metrics(*, predictions, references, metric='cer', lowercase=False):
 
-    references = [normalize(r) for r in references]
-    predictions = [normalize(p) for p in predictions]
+    references = [normalize(r, lowercase) for r in references]
+    predictions = [normalize(p, lowercase) for p in predictions]
 
     scores = {}
 
@@ -32,7 +32,7 @@ def calculate_metrics(*, predictions, references, metric='cer'):
 
     return scores
 
-def evaluate(*, p_args, r_args, metric='cer'):
+def evaluate(*, p_args, r_args, metric='cer', lowercase=False):
     """
     Evaluates the similarity of two lists of examples with the given metric(s) (defaults to CER). Returns a dictionary holding the score(s).
 
@@ -50,7 +50,7 @@ def evaluate(*, p_args, r_args, metric='cer'):
     references = read_jsonl(r_args)
 
     assert len(predictions) == len(references)
-    metrics = calculate_metrics(predictions=predictions, references=references, metric=metric)
+    metrics = calculate_metrics(predictions=predictions, references=references, metric=metric, lowercase=lowercase)
 
     return metrics
 
