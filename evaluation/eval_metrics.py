@@ -3,9 +3,6 @@ import unicodedata
 import argparse
 import json
 
-wer_metric = load("wer")
-cer_metric = load("cer")
-character_metric = load("character")
 
 def normalize(text: str, lowercase=False):
 
@@ -14,7 +11,7 @@ def normalize(text: str, lowercase=False):
 
     return unicodedata.normalize("NFKC", text)
 
-def calculate_metrics(*, predictions, references, metric='cer', lowercase=False):
+def calculate_metrics(*, predictions, references, metric="cer", lowercase=False):
 
     references = [normalize(r, lowercase) for r in references]
     predictions = [normalize(p, lowercase) for p in predictions]
@@ -22,14 +19,14 @@ def calculate_metrics(*, predictions, references, metric='cer', lowercase=False)
     scores = {}
 
     if metric == "cer" or metric == "all":
-        scores["cer"] = cer_metric.compute(predictions=predictions, references=references)
+        scores["cer"] = load("cer").compute(predictions=predictions, references=references)
     
     if metric == "wer" or metric == "all":
-        scores["wer"] = wer_metric.compute(predictions=predictions, references=references)
+        scores["wer"] = load("wer").compute(predictions=predictions, references=references)
     
     if metric == "character" or metric == "all":
-        scores["character"] = character_metric.compute(predictions=predictions, references=references)["cer_score"]
-
+        scores["character"] = load("character").compute(predictions=predictions, references=references)["cer_score"]
+    
     return scores
 
 def evaluate(*, p_args, r_args, metric='cer', lowercase=False):
@@ -99,9 +96,9 @@ def main():
     references = read_jsonl(args.references)
     assert len(predictions) == len(references)
 
-    metrics = calculate_metrics(predictions=predictions, references=references, metric=args.metrics)
+    scores = calculate_metrics(predictions=predictions, references=references, metric=args.metrics)
     print(f"Number of examples: {len(predictions)}")
-    print(metrics)
+    print(scores)
 
 if __name__ == "__main__":
     main()
