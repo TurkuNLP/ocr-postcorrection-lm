@@ -8,14 +8,20 @@ from collections import defaultdict
 from datetime import datetime
 
 import re
+from math import ceil 
+import numpy as np 
+import traceback 
 
 import logging
-logging.getLogger('transformers').setLevel(logging.ERROR) ## in order to disable """A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'` when initializing the tokenizer.""", which in our case does not hold.
+logging.getLogger('transformers').setLevel(logging.ERROR) ## in order to disable """A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'`  when initializing the tokenizer.""", which in our case does not hold.
 
+def prRed(skk): print("\033[91m {}\033[00m" .format(skk)) #print stuff in red 
+    
 
 def correct(text, model=None, tokenizer=None, ollama=False):
     window_size = 300 ###TODO replace window size with best number
     prompts, texts, reference_numbers = prepare_text_input(text, tokenizer, slicing = True, window_size = window_size) 
+    print(texts)
     generated_outputs = []
 
     for index, prompt in enumerate(prompts):
@@ -28,25 +34,31 @@ def correct(text, model=None, tokenizer=None, ollama=False):
         print("generation time = ", gen_time, "seconds for", len(model_output), "characters")
         normalized_output = suppress_format(model_output)
         normalized_input = suppress_format(texts[index])
-        alignment = align(normalized_input["text"], normalized_output["text"])
+        alignment, alignment_array = align(normalized_input["text"], normalized_output["text"])
 
         print(alignment[0])
         alignment_string = craft_alignment_string(alignment)
         print(alignment_string)
         print(alignment[1])
-        start, end = extract_aligned_text(normalized_output, alignment[1], alignment_string)
+        start, end = new_extract_aligned_text(normalized_output, alignment, alignment_array)
         
         aligned_output = model_output[start:end]
         generated_outputs.append(aligned_output)
     print(len(generated_outputs), "outputs have been generated.\nMerging...")
-    print(generated_outputs)
+    prRed("aligned output1")
+    print(generated_outputs[0])
+    prRed("aligned output2")
+    print(generated_outputs[1])
+    prRed("aligned output3")
+    print(generated_outputs[2])
+    
     shen_time = datetime.now()
-    for i in range(3-len(generated_outputs)%3):
-        generated_outputs.append("")
-
+    
     corrected_texts = generated_outputs
 
     while len(corrected_texts)!=1:
+        for i in range((3-len(corrected_texts))%3):
+            corrected_texts.append("")
         temp = []
         for i in range(len(corrected_texts)//3):
             
@@ -59,7 +71,7 @@ def correct(text, model=None, tokenizer=None, ollama=False):
         corrected_texts = temp
     shen_time = round((datetime.now()-shen_time).total_seconds(), 1)
     print("processes other than generations took ", shen_time, "seconds.")
-    return corrected_texts
+    return corrected_texts[0]
     
 
 def run_ollama(model, prompts):
@@ -84,6 +96,7 @@ def get_prompt_size(tokenizer):  # for now this is only used to get to know how 
     
 
 def prepare_text_input(input, tokenizer, slicing=False, window_size=100):
+    overlap = int(window_size*0.3)
     device="cuda"
     if not slicing:
         text = example["input"]
@@ -98,8 +111,9 @@ def prepare_text_input(input, tokenizer, slicing=False, window_size=100):
         tokenized_text = tokenizer(input,return_offsets_mapping=True, return_tensors="pt").to(device)
 
         n = tokenized_text["input_ids"].size()[1]
+        print(n, "tokens")
         mapping = tokenized_text["offset_mapping"]
-        number_of_slices = max(1, n//window_size)
+        number_of_slices = max(1, ceil(n/window_size))
         
         #if number_of_slices > 1 :
          #   number_of_slices-=1       only for window size evaluation
@@ -107,9 +121,9 @@ def prepare_text_input(input, tokenizer, slicing=False, window_size=100):
         for i in range(number_of_slices):
             print('i', i)
             try:
-                text = input[int(mapping[0][i*window_size][0]):int(mapping[0][(i+1)*window_size][0])]
+                text = input[int(mapping[0][i*(window_size-overlap)][0]):int(mapping[0][i*(window_size-overlap)+window_size][0])]
             except:
-                text = input[int(mapping[0][i*window_size][0]):int(mapping[0][-1][1])]
+                text = input[int(mapping[0][i*(window_size-overlap)][0]):int(mapping[0][-1][1])]
                 
             prompt = f""" Correct the OCR errors in the text below. Also correct the "-" characters, which denote an unrecognized letter. Stay as close as possible to the original text. Do not rephrase. Only correct the errors. You will be rewarded.\n\n{text}"""
             texts.append(text)
@@ -136,12 +150,17 @@ def run_lm(model, tokenizer, prompt, window_size):
 
 ### glueing-back test
 def find_overlap(s1, s2):
-    matcher = difflib.SequenceMatcher(None, s1, s2)
+    alignment, alignment_array = align(s1, s2)
+    a = alignment_array[0, -1][1]
+    b = alignment_array[1, -1][1]
+    return s1[:a] + s2[b:], a, b
+    
+    '''matcher = difflib.SequenceMatcher(None, s1, s2)
     match = matcher.find_longest_match(0, len(s1), 0, len(s2))
     if match.size > 0:
         return s1[:match.a] + s2[match.b:], match.a, match.b
     else:
-        return s1 + s2, len(s1), len(s2)
+        return s1 + s2, len(s1), len(s2)'''
 
 ### weight function for the characters in the string
 def weightify(x, length):
@@ -173,9 +192,9 @@ def weighted_merge(str1, str2, str3):
     #print(temp_str1)
     #print(temp_str2)
     #print(temp_str3)
-    weights = [[ weightify(i, len(str1)) for i in range(len(str1))] + [0 for i in range(end1)], 
-               [0 for i in range(start2)] + [ weightify(i, len(str2)) for i in range(len(str2))] + [0 for i in range(end2)], 
-               [0 for i in range(start3)] + [ weightify(i, len(str3)) for i in range(len(str3))]]
+    weights = [[ weightify(i, len(str1)) for i in range(len(str1))] + [-1 for i in range(end1)], 
+               [-1 for i in range(start2)] + [ weightify(i, len(str2)) for i in range(len(str2))] + [-1 for i in range(end2)], 
+               [-1 for i in range(start3)] + [ weightify(i, len(str3)) for i in range(len(str3))]]
 
     #print(weights[0])
     #print(weights[1])
@@ -215,7 +234,7 @@ def match(l,r):
 ### BASE ALIGNMENT
 def align(input_text, output_text):
     aligner = PairwiseAligner()
-    aligner.mode = 'global'
+    aligner.mode = 'local'
     aligner.target_end_gap_score = 0.0
     aligner.query_end_gap_score = 0.0
     aligner.open_gap_score = -1
@@ -223,7 +242,7 @@ def align(input_text, output_text):
     alignments = aligner.align(input_text, output_text)
     alignment = alignments[0]
     alignment = [alignment[0].replace("-", " "), alignment[1].replace("-", " ")]
-    return alignment
+    return alignment, alignments[0].aligned
 
 ### STORE THE INDICES OF FORMATTING CHARACTERS
 def mapping_format(input_text):
@@ -273,7 +292,28 @@ def revert_to_original_format(input_text, map): # does the opposite of the funct
     original_text = ''.join(text)
     
     return original_text
+
+
+def new_extract_aligned_text(normalized_text, alignment, alignment_array):
+    input_text = normalized_text["text"]
+    map = normalized_text["map"]
+    aligned_text = alignment[1]
+    shape = alignment_array.shape
     
+    word_start, word_end = alignment_array[1, 0][0], alignment_array[1, shape[1]-1][1]   
+    #new_word_start, new_word_end = word_start, word_end
+    #for index, char in enumerate(aligned_text[:word_end+1]):      #tricky for-loop to recalibrate indices according to the alignment gaps (" ")
+     #   if char==" ":
+      #      new_word_end-=1
+       #     if index<word_start:
+        #        new_word_start-=1
+
+    print(word_start, word_end, len(map["words"]))
+    start, end = map["words"][word_start], map["words"][word_end-1]+1
+
+    return start, end 
+
+
 ### EXTRACTION OF ORIGINAL TEXT 
 def extract_aligned_text(normalized_text, aligned_text, alignment_string):
     input_text = normalized_text["text"]
@@ -315,5 +355,70 @@ def craft_alignment_string(alignment):
 
 
 if __name__=="__main__":
-    None
+    from transformers import AutoTokenizer
+    import subprocess
+
+    subprocess.call("ollama.sh")
+    cache_dir = '/scratch/project_2005072/ocr_correction/.cache'  # path to the cache dir where the models are
+    with open("huggingface_key.txt", "r") as f:
+        access_token = f.readline()
+    
+    tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct", padding_side="left", token=access_token)
+    tokenizer.pad_token = tokenizer.eos_token  
+    
+    print("starting correction")
+    
+    test = astral.correct("""
+    When, .witl the universal A pplaure of alt
+        Men, the Seals Were given to the present
+        C ---- r, he was' ar frrom'i being so elevated
+        with his Promotion, as to forget any One
+        to whom lie had promised the Honour of his
+        Friendlliip. An Opportunity soon offered
+        in Favour of Dr R----, the B---k ox G----r
+        became vacant, .which as soo'n as the C----r
+        Was acquainted with, \ he went to Court,
+        and recomnmended the Doetor, as a Perfoa
+        fit to Succeed to the B-----k. The DoAos
+        was then approved of, and a C---'E---
+        order'd out accordingly. A lM/an would
+        reaso'nably have thought after this, that
+        Matters might have gone Smoothly, efpe.
+        cially as it is partly the Right of every new
+        C--- r, to' recommend a fit Person to his
+        M .------, to' fill the See that shall becom'
+        eax¢ant after ihs comiig to the Seals.
+        
+    However, contrary to all expectations, unforeseen difficulties arose. 
+    The noblemen of the realm, who had their own candidates, 
+    began to murmur and sow discord among the courtiers. 
+    The C----r found himself in a perplexing position, 
+    trying to uphold his honour while placating the influential 
+    factions within the court. Despite the approval of the Doctor, 
+    whispers of dissent grew louder, 
+    and intrigues within the palace became more convoluted.
+    
+    he Doctor, unaware of the brewing storm, prepared himself diligently for his new responsibilities. 
+    He was a man of learning and integrity, well-liked by his peers and admired by his students. 
+    Yet, the political landscape was treacherous. Letters filled with veiled threats and promises 
+    of support started circulating, each trying to sway the C----r's decision or undermine his authority.
+    
+    The C----r, unwavering in his commitment, sought the counsel of his closest advisors. 
+    Among them was Sir W----, a man of seasoned wisdom and unwavering loyalty. 
+    Sir W---- advised caution and suggested a strategy to strengthen the Doctor's position by garnering the support 
+    of the influential church leaders. "A show of unity and strength," he said, 
+    "will silence the naysayers and ensure the Doctor's smooth ascension.
+    
+    In his speech, the C----r extolled the virtues of the Doctor, 
+    highlighting his contributions to the field of medicine and his unwavering commitment 
+    to the welfare of the people. His words were met with applause, and for a moment, 
+    it seemed as if the opposition had been quelled. The Doctor was officially installed 
+    in his new position, and a grand celebration ensued.""",
+                          
+    model="llama3", tokenizer=tokenizer, ollama=True)
+    
+    print("\n\n\n")
+    print("corrected text:\n")
+    print(test)
+    
     
