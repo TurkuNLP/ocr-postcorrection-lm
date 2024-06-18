@@ -3,32 +3,33 @@ import unicodedata
 import argparse
 import json
 
-wer_metric = load("wer")
-cer_metric = load("cer")
-character_metric = load("character")
 
-def normalize(text):
+def normalize(text: str, lowercase=False):
+
+    if lowercase:
+        return unicodedata.normalize("NFKC", text.casefold())
+
     return unicodedata.normalize("NFKC", text)
 
-def calculate_metrics(*, predictions, references, metric='cer'):
+def calculate_metrics(*, predictions, references, metric="cer", lowercase=False):
 
-    references = [normalize(r) for r in references]
-    predictions = [normalize(p) for p in predictions]
+    references = [normalize(r, lowercase) for r in references]
+    predictions = [normalize(p, lowercase) for p in predictions]
 
     scores = {}
 
     if metric == "cer" or metric == "all":
-        scores["cer"] = cer_metric.compute(predictions=predictions, references=references)
+        scores["cer"] = load("cer").compute(predictions=predictions, references=references)
     
     if metric == "wer" or metric == "all":
-        scores["wer"] = wer_metric.compute(predictions=predictions, references=references)
+        scores["wer"] = load("wer").compute(predictions=predictions, references=references)
     
     if metric == "character" or metric == "all":
-        scores["character"] = character_metric.compute(predictions=predictions, references=references)["cer_score"]
-
+        scores["character"] = load("character").compute(predictions=predictions, references=references)["cer_score"]
+    
     return scores
 
-def evaluate(*, p_args, r_args, metric='cer'):
+def evaluate(*, p_args, r_args, metric='cer', lowercase=False):
     """
     Evaluates the similarity of two lists of examples with the given metric(s) (defaults to CER). Returns a dictionary holding the score(s).
 
@@ -46,7 +47,7 @@ def evaluate(*, p_args, r_args, metric='cer'):
     references = read_jsonl(r_args)
 
     assert len(predictions) == len(references)
-    metrics = calculate_metrics(predictions=predictions, references=references, metric=metric)
+    metrics = calculate_metrics(predictions=predictions, references=references, metric=metric, lowercase=lowercase)
 
     return metrics
 
@@ -95,9 +96,9 @@ def main():
     references = read_jsonl(args.references)
     assert len(predictions) == len(references)
 
-    metrics = calculate_metrics(predictions=predictions, references=references, metric=args.metrics)
+    scores = calculate_metrics(predictions=predictions, references=references, metric=args.metrics)
     print(f"Number of examples: {len(predictions)}")
-    print(metrics)
+    print(scores)
 
 if __name__ == "__main__":
     main()
