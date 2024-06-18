@@ -86,6 +86,11 @@ def initialize_argparse():
                         required=False,
                         default="cer",
                         help="Choose which metric(s) to use for evaluation. If no metric is given, CER (Character Error Rate) is used.")
+    parser.add_argument("-l",
+                        "--lower",
+                        required=False,
+                        action='store_true',
+                        help="Use casefolding (aggresive lowercasing) for text before evaluation. Not used by default.")
     return parser.parse_args()
 
 def main():
@@ -96,7 +101,7 @@ def main():
     references = read_jsonl(args.references)
     assert len(predictions) == len(references)
 
-    scores = calculate_metrics(predictions=predictions, references=references, metric=args.metrics)
+    scores = calculate_metrics(predictions=predictions, references=references, metric=args.metrics, lowercase=args.lower)
     print(f"Number of examples: {len(predictions)}")
     print(scores)
 
