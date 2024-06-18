@@ -10,6 +10,8 @@ Expects the predictions and references to be stored in .jsonl files. By default,
 
 Uses CER for evaluation, unless a different metric is given.
 
+The text can be casefolded (aggressively lowercased) before feeding to the evaluation metric by giving the -l | --lower flag.
+
 **Example usage**
 
 ```
@@ -23,6 +25,7 @@ Required:
 
 Optional:
     -m | --metric {cer,wer,character,all}
+    -l | --lower
 ```
 
 ## Function call usage
@@ -54,18 +57,18 @@ print(scores)
 
 ### `evaluate()`
 
-Use if the predictions and references are stored in .jsonl files.
+Use if the predictions and references are stored in `.jsonl` files.
 
 Takes 4 keyword arguments:
 
-- `p_args=` (a string that stores the path or file name OR a list where the first element is the path/file name and the second is the key to the text (by default: "output"))
-- `r_args_=` (a string that stores the path or file name OR a list where the first element is the path/file name and the second is the key to the text (by default: "output"))
+- `p_args=` (a string that stores the path or file name OR a list where the first element is the path/file name and the second is the key to the text (by default: `output`))
+- `r_args_=` (a string that stores the path or file name OR a list where the first element is the path/file name and the second is the key to the text (by default: `output`))
 - `metric="cer"` (_optional_, `cer`|`wer`|`character`|`all`)
 - `lowercase="False"` (_optional_, `True` | `False`)
 
 **Example usage**
 
-If the text is stored under the default key ("output"):
+If the text is stored under the default key (`output`):
 
 ```
 from eval_metrics import evaluate
