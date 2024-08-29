@@ -2,8 +2,8 @@ from Bio.Align import PairwiseAligner
 
 from langchain_community.chat_models import ChatOllama
 from langchain.schema import HumanMessage
+import ollama
 
-import difflib
 from collections import defaultdict
 from datetime import datetime
 
@@ -16,7 +16,6 @@ import logging
 logging.getLogger('transformers').setLevel(logging.ERROR) ## in order to disable """A decoder-only architecture is being used, but right-padding was detected! For correct generation results, please set `padding_side='left'`  when initializing the tokenizer.""", which in our case does not hold.
 
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk)) #print stuff in red 
-    
 
 def correct(text, model=None, tokenizer=None, ollama=False):
     window_size = 300 ###TODO replace window size with best number
@@ -74,13 +73,21 @@ def correct(text, model=None, tokenizer=None, ollama=False):
     return corrected_texts[0]
     
 
-def run_ollama(model, prompts):
-    ollama = ChatOllama(model=model, temperature=0.8)
-    prompts = [ [HumanMessage(content=prompt)] for prompt in prompts]
-    print("started generating")
-    results = ollama.generate(prompts)
-    print("done with generation")
-    return [ result[0].text for result in results.generations ]
+def run_ollama(model, prompts, temperature):
+    #ollama = ChatOllama(model=model, temperature=0.8)
+    #prompts = [ [HumanMessage(content=prompt)] for prompt in prompts]
+    response = ollama.chat(model='llama3.1', messages=[
+                          {
+                            'role': 'user',
+                            'content': prompts[O],
+                          },
+                        ],
+                        options = {
+                          'temperature': temperature,
+                        })
+    print("generating...")
+
+    return [ response['message']['content'] ]
 
 
 def get_prompt_size(tokenizer):  # for now this is only used to get to know how long the prompt is in terms of token length to not cut it when slicing the text
@@ -148,88 +155,6 @@ def run_lm(model, tokenizer, prompt, window_size):
     
     return model_output
 
-### glueing-back test
-def find_overlap(s1, s2):
-    alignment, alignment_array = align(s1, s2)
-    a = alignment_array[0, -1][1]
-    b = alignment_array[1, -1][1]
-    return s1[:a] + s2[b:], a, b
-    
-    '''matcher = difflib.SequenceMatcher(None, s1, s2)
-    match = matcher.find_longest_match(0, len(s1), 0, len(s2))
-    if match.size > 0:
-        return s1[:match.a] + s2[match.b:], match.a, match.b
-    else:
-        return s1 + s2, len(s1), len(s2)'''
-
-### weight function for the characters in the string
-def weightify(x, length):
-    y = x-length/2
-    y = y**2
-    y = -y
-    y = y /(length/2)**2
-    y += 1
-
-    return y
-    
-### MERGING 3 STRINGS
-def weighted_merge(str1, str2, str3):
-    merged, a, b = find_overlap(str1, str2)  
-    m = len(merged)
-    merged, c, d = find_overlap(merged, str3)
-
-    #print(merged)
-
-    end1 = len(merged)-len(str1)
-    start2 = a-b
-    end2 = len(merged)-m
-    start3 = len(merged)-len(str3)
-
-    temp_str1 = str1 + "@"*end1
-    temp_str2 = "@"*start2 + str2 + "@"*end2
-    temp_str3 = "@"*start3 + str3
-    
-    #print(temp_str1)
-    #print(temp_str2)
-    #print(temp_str3)
-    weights = [[ weightify(i, len(str1)) for i in range(len(str1))] + [-1 for i in range(end1)], 
-               [-1 for i in range(start2)] + [ weightify(i, len(str2)) for i in range(len(str2))] + [-1 for i in range(end2)], 
-               [-1 for i in range(start3)] + [ weightify(i, len(str3)) for i in range(len(str3))]]
-
-    #print(weights[0])
-    #print(weights[1])
-    #print(weights[2])
-    char_weights = defaultdict(lambda: defaultdict(int))
-
-    for idx, char in enumerate(temp_str1):
-        char_weights[idx][char] += weights[0][idx]
-    for idx, char in enumerate(temp_str2):
-        char_weights[idx][char] += weights[1][idx]
-    for idx, char in enumerate(temp_str3):
-        char_weights[idx][char] += weights[2][idx]
-        
-    final_string = []
-    for i in range(len(merged)):
-        #print(char_weights[i])
-        if char_weights[i]:
-            char, _ = max(char_weights[i].items(), key=lambda item: item[1]) # highest weight wins
-            final_string.append(char)
-        else:
-            # If no weight information, just take the character from the merged string
-            final_string.append(merged[i])
-
-    return ''.join(final_string)
-
-### MATCH SCORES (only used with pairwise2)
-def match(l,r):
-    if l=="s" and r=="ſ":
-        return 1
-    elif l=="ſ" and r=="s":
-        return 1
-    elif l==r:
-        return 1
-    else:
-        return 0
 
 ### BASE ALIGNMENT
 def align(input_text, output_text):
@@ -243,6 +168,7 @@ def align(input_text, output_text):
     alignment = alignments[0]
     alignment = [alignment[0].replace("-", " "), alignment[1].replace("-", " ")]
     return alignment, alignments[0].aligned
+
 
 ### STORE THE INDICES OF FORMATTING CHARACTERS
 def mapping_format(input_text):
@@ -276,6 +202,7 @@ def suppress_format(input_text):   # delete spaces and newlines and provide a ma
     text = input_text.replace("\n", "").replace(" ", "").replace("-", "")
     return {"map": map, "text": text}
 
+
 def revert_to_original_format(input_text, map): # does the opposite of the function above
     length = len(map["spaces"]) + len(map["new_lines"]) + len(map["dashes"]) + len(map["words"])
     text = [None for i in range(length)]
@@ -293,47 +220,22 @@ def revert_to_original_format(input_text, map): # does the opposite of the funct
     
     return original_text
 
-
-def new_extract_aligned_text(normalized_text, alignment, alignment_array):
+### EXTRACTION OF ORIGINAL TEXT 
+def new_extract_aligned_text(normalized_text, alignment, alignment_array, reversed=False):
     input_text = normalized_text["text"]
     map = normalized_text["map"]
     aligned_text = alignment[1]
     shape = alignment_array.shape
-    
-    word_start, word_end = alignment_array[1, 0][0], alignment_array[1, shape[1]-1][1]   
-    #new_word_start, new_word_end = word_start, word_end
-    #for index, char in enumerate(aligned_text[:word_end+1]):      #tricky for-loop to recalibrate indices according to the alignment gaps (" ")
-     #   if char==" ":
-      #      new_word_end-=1
-       #     if index<word_start:
-        #        new_word_start-=1
 
-    print(word_start, word_end, len(map["words"]))
+    if not reversed:
+        word_start, word_end = alignment_array[1, 0][0], alignment_array[1, shape[1]-1][1]  
+    else:
+        word_start, word_end = alignment_array[0, 0][0], alignment_array[0, shape[1]-1][1] 
+
     start, end = map["words"][word_start], map["words"][word_end-1]+1
 
     return start, end 
 
-
-### EXTRACTION OF ORIGINAL TEXT 
-def extract_aligned_text(normalized_text, aligned_text, alignment_string):
-    input_text = normalized_text["text"]
-    map = normalized_text["map"]
-
-    matches = list(re.finditer(r'[|.]+', alignment_string))
-        
-    last_match = max(matches, key=lambda m: m.end())
-    first_match = min(matches, key=lambda m: m.start())
-    word_start, word_end = first_match.start(), last_match.end()-1     # -1 here because the .end() is the first index not included, i.e. can can be out of bounds.
-    new_word_start, new_word_end = word_start, word_end
-    for index, char in enumerate(aligned_text[:word_end+1]):      #tricky for-loop to recalibrate indices according to the alignment gaps (" ")
-        if char==" ":
-            new_word_end-=1
-            if index<word_start:
-                new_word_start-=1
-                
-    start, end = map["words"][new_word_start], map["words"][new_word_end]
-
-    return start, end 
 
 ### MANUAL CRAFT OF ALIGNMENT STRING 
 # mostly created for alignment with smoothing window but also convenient for other operations
