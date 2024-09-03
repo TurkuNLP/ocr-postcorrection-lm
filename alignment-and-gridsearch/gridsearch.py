@@ -1,18 +1,21 @@
 import json 
 import argparse
 import optuna
+import sys
+import gzip
+
+sys.path.append('/scratch/project_2005072/cassandra/ocr-postcorrection-lm/evaluation')
 from eval_metrics import calculate_metrics
 
 sys.path.append('/scratch/project_2005072/cassandra/ocr-postcorrection-lm/alignment-and-gridsearch')
-
 import alignment.utils as astral
 import text_correction.utils as corrector
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--input_file", type=str, default="/scratch/project_2000539/jenna/ocr-correction/by_page_dev_slim.jsonl.gz")
-parser.add_argument("--output_file", type=str, default="out.jsonl", help="Output file for results, not implemented yet") #TODO : clean output file ?
-parser.add_argument("--model", type=str, default="mistralai/Mixtral-8x7B-Instruct-v0.1", help="Model name or path")
-parser.add_argument("--ntrials", type=int, default=5, help="Number of trials in the optuna gridsearch")
+parser.add_argument("--output_file", type=str, default="test.jsonl", help="Output file for results") 
+parser.add_argument("--model", type=str, default="meta-llama/Meta-Llama-3.1-8B-Instruct", help="Model name or path")
+parser.add_argument("--ntrials", type=int, default=100, help="Number of trials in the optuna gridsearch")
 args = parser.parse_args()
 
 def objective(trial):
@@ -20,15 +23,30 @@ def objective(trial):
     mirostat_tau = trial.suggest_float("mirostat_tau", 0, 7)
     window_size = trial.suggest_int("window_size", 10, 1000)
     overlap_percentage = trial.suggest_float("overlap_percentage", 0.05, 0.95)
+
+    # other variables to look through ? 
+
+    model_options = {
+        "temperature": temperature, 
+        "mirostat": 2,
+        "mirostat_tau": mirostat_tau,
+    }
+
+    text_options = {
+        "window_size": window_size, 
+        "overlap_percentage": overlap_percentage,
+    }
+
+    overall_metrics=0
     
-    with open(args.input_file, "r") as f:
+    with gzip.open(args.input_file, "r") as f:
         count=0
         
         for line in f:         
             book = json.loads(line)
-            corrected_text = corrector.correct_document(book["input"], model="meta-llama/Meta-Llama-3.1-8B")
+            corrected_text = corrector.correct_document(book["input"], model=args.model, model_options=model_options, text_options=text_options)
             
-            with open( "./corrections/" + doc_name + ".jsonl", "wt" ) as f:
+            with open( "./gridsearch_output/"+args.output_file, "at" ) as f:
                 normalized_text = astral.suppress_format(book["input"])
                 normalized_response = astral.suppress_format(corrected_text)
                 
@@ -37,14 +55,16 @@ def objective(trial):
                 
                 json_content = {"alignments":{"aligned_ocr" : alignment[0], 
                                               "aligned_correction" : alignment[1] ,
-                                              "alignment_string": alignment_string} ,
+                                              "alignment_string": alignment_string},
                                "originals": { "input": book["input"], 
                                             "output":book["output"],
-                                            "corrected_input": corrected_text}
+                                            "corrected_input": corrected_text}, 
+                                "scores": metrics, 
+                                "parameters": trial.params
                                }                   
                 print(json.dumps(json_content), file=f)
             
-            metrics = calculate_metrics(predictions=corrected_text, references=book["input"])
+            metrics = calculate_metrics(predictions=[corrected_text], references=[book["input"]])
     
             overall_metrics += metrics["cer"]
             count+=1
