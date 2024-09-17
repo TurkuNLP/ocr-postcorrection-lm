@@ -19,13 +19,13 @@ def run_ollama(model, prompts, model_options, verbose=False):
     return [ response['message']['content'] ]
 
 ### BASE ALIGNMENT
-def align(input_text, output_text):
+def align(input_text, output_text, aligner_options={"open_gap_score":-1, "extend_gap_score":-0.5}):
     aligner = PairwiseAligner()
     aligner.mode = 'local'
     aligner.target_end_gap_score = 0.0
     aligner.query_end_gap_score = 0.0
-    aligner.open_gap_score = -1
-    aligner.extend_gap_score = -0.5 # trying out stuff
+    aligner.open_gap_score = aligner_options["open_gap_score"]
+    aligner.extend_gap_score = aligner_options["extend_gap_score"]
     alignments = aligner.align(input_text, output_text)
     alignment = alignments[0]
     alignment = [alignment[0].replace("-", " "), alignment[1].replace("-", " ")]

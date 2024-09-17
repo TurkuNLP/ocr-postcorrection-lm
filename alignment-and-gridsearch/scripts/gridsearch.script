@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=grid-search
-#SBATCH --account=project_2005072
+#SBATCH --account=project_2000539
 #SBATCH --time=24:00:00
 #SBATCH --mem-per-cpu=20G
 #SBATCH --partition=gpu
