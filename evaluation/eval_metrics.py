@@ -2,6 +2,7 @@ from evaluate import load
 import unicodedata
 import argparse
 import json
+import numpy as np
 
 
 def normalize(text: str, lowercase=False):
@@ -16,16 +17,36 @@ def calculate_metrics(*, predictions, references, metric="cer", lowercase=False)
     references = [normalize(r, lowercase) for r in references]
     predictions = [normalize(p, lowercase) for p in predictions]
 
-    scores = {}
+    scores = {"micro": {}, "mean": {}, "median": {}}
 
+    # micro
     if metric == "cer" or metric == "all":
-        scores["cer"] = load("cer").compute(predictions=predictions, references=references)
+        cer_metric = load("cer")
+        scores["micro"]["cer"] = cer_metric.compute(predictions=predictions, references=references)
+        document_scores = []
+        for p, r in zip(predictions, references):
+            document_scores.append(cer_metric.compute(predictions=[p], references=[r]))
+        scores["mean"]["cer"] = np.mean(document_scores)
+        scores["median"]["cer"] = np.median(document_scores)
     
     if metric == "wer" or metric == "all":
-        scores["wer"] = load("wer").compute(predictions=predictions, references=references)
+        wer_metric = load("wer")
+        scores["micro"]["wer"] = wer_metric.compute(predictions=predictions, references=references)
+        document_scores = []
+        for p, r in zip(predictions, references):
+            document_scores.append(wer_metric.compute(predictions=[p], references=[r]))
+        scores["mean"]["wer"] = np.mean(document_scores)
+        scores["median"]["wer"] = np.median(document_scores)
     
     if metric == "character" or metric == "all":
-        scores["character"] = load("character").compute(predictions=predictions, references=references)["cer_score"]
+        character_metric = load("character")
+        scores["micro"]["character"] = character_metric.compute(predictions=predictions, references=references)["cer_score"]
+        document_scores = []
+        for p, r in zip(predictions, references):
+            document_scores.append(cer_metric.compute(predictions=[p], references=[r])["cer_score"])
+        scores["mean"]["character"] = np.mean(document_scores)
+        scores["median"]["character"] = np.median(document_scores)
+
     
     return scores
 
