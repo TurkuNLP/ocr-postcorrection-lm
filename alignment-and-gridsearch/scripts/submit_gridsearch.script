@@ -1,9 +1,6 @@
 mkdir -p eo_gridsearch
 
-for i in 4 8 
-do
-    for j in "meta-llama/Meta-Llama-3-8B-Instruct" 
-        do
-        sbatch -e eo_gridsearch/allo$i.err -o eo_gridsearch/allo$i.out gridsearch.script $i $j
-        done
-done
+for i in "meta-llama/Meta-Llama-3.1-8B-Instruct" "meta-llama/Meta-Llama-3-8B-Instruct"
+    do
+    sbatch -e eo_gridsearch/$i.err -o eo_gridsearch/$i.out gridsearch.script $i 
+    done
