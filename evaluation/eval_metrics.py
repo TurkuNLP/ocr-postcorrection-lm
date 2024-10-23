@@ -5,52 +5,76 @@ import json
 import numpy as np
 
 
-def normalize(text: str, lowercase=False):
+def normalize(text: str, lowercase=False, modernize=False):
+    if modernize:
+        text = text.replace("w", "v").replace("W", "V")
 
     if lowercase:
         return unicodedata.normalize("NFKC", text.casefold())
 
     return unicodedata.normalize("NFKC", text)
 
-def calculate_metrics(*, predictions, references, metric="cer", lowercase=False):
+def calculate_metrics(*, predictions, references, originals=None, metric="cer", lowercase=False, modernize=False):
 
-    references = [normalize(r, lowercase) for r in references]
-    predictions = [normalize(p, lowercase) for p in predictions]
+    references = [normalize(r, lowercase, modernize) for r in references]
+    predictions = [normalize(p, lowercase, modernize) for p in predictions]
+    if originals:
+        originals = [normalize(o, lowercase, modernize) for o in originals]
 
     scores = {"micro": {}, "mean": {}, "median": {}}
+    all_document_scores = {}
 
-    # micro
-    if metric == "cer" or metric == "all":
-        cer_metric = load("cer")
-        scores["micro"]["cer"] = cer_metric.compute(predictions=predictions, references=references)
+    # init metrics
+    metrics = []
+    if metric == "cer":
+        metrics.append(("cer", load("cer")))
+    elif metric == "wer":
+        metrics.append(("wer", load("wer")))
+    elif metric == "character":
+        metrics.append(("character", load("character")))
+    elif metric == "all":
+        metrics = [("cer", load("cer")), ("wer", load("wer")), ("character", load("character"))]
+    else:
+        assert False, "Unknown metric."
+
+    for metric_name, metric_obj in metrics:
+        scores["micro"][metric_name] = metric_obj.compute(predictions=predictions, references=references)
         document_scores = []
         for p, r in zip(predictions, references):
-            document_scores.append(cer_metric.compute(predictions=[p], references=[r]))
-        scores["mean"]["cer"] = np.mean(document_scores)
-        scores["median"]["cer"] = np.median(document_scores)
-    
-    if metric == "wer" or metric == "all":
-        wer_metric = load("wer")
-        scores["micro"]["wer"] = wer_metric.compute(predictions=predictions, references=references)
-        document_scores = []
-        for p, r in zip(predictions, references):
-            document_scores.append(wer_metric.compute(predictions=[p], references=[r]))
-        scores["mean"]["wer"] = np.mean(document_scores)
-        scores["median"]["wer"] = np.median(document_scores)
-    
-    if metric == "character" or metric == "all":
-        character_metric = load("character")
-        scores["micro"]["character"] = character_metric.compute(predictions=predictions, references=references)["cer_score"]
-        document_scores = []
-        for p, r in zip(predictions, references):
-            document_scores.append(cer_metric.compute(predictions=[p], references=[r])["cer_score"])
-        scores["mean"]["character"] = np.mean(document_scores)
-        scores["median"]["character"] = np.median(document_scores)
+            s = metric_obj.compute(predictions=[p], references=[r])
+            if metric_name == "character":
+                s = s["cer_score"]
+            document_scores.append(s)
+        scores["mean"][metric_name] = np.mean(document_scores)
+        scores["median"][metric_name] = np.median(document_scores)
+        all_document_scores[metric_name] = document_scores
+
+
+    if originals:
+        # calculate improvements
+        scores["improvement"] = {}
+        for metric_name, metric_obj in metrics:
+            scores["improvement"][metric_name] = {}
+
+            orig_scores = []
+            for o, r in zip(originals, references):
+                s = metric_obj.compute(predictions=[o], references=[r])
+                if metric_name == "character":
+                    s = s["cer_score"]
+                orig_scores.append(s)
+            improvements = []
+            pred_scores = all_document_scores[metric_name]
+            for pred_d, orig_d in zip(pred_scores, orig_scores):
+                impv = (orig_d - pred_d) / orig_d
+                impv = min(max(impv, -1), 1) # cut to -1, 1
+                improvements.append(impv)
+            scores["improvement"][metric_name]["mean"] = np.mean(improvements)
+            scores["improvement"][metric_name]["median"] = np.median(improvements)
 
     
     return scores
 
-def evaluate(*, p_args, r_args, metric='cer', lowercase=False):
+def evaluate(*, p_args, r_args, metric='cer', lowercase=False, modernize=False):
     """
     Evaluates the similarity of two lists of examples with the given metric(s) (defaults to CER). Returns a dictionary holding the score(s).
 
@@ -68,9 +92,10 @@ def evaluate(*, p_args, r_args, metric='cer', lowercase=False):
     references = read_jsonl(r_args)
 
     assert len(predictions) == len(references)
-    metrics = calculate_metrics(predictions=predictions, references=references, metric=metric, lowercase=lowercase)
+    metrics = calculate_metrics(predictions=predictions, references=references, metric=metric, lowercase=lowercase, modernize=modernize)
 
     return metrics
+
 
 def read_jsonl(args):
 
@@ -82,6 +107,8 @@ def read_jsonl(args):
     with open(args[0], "rt", encoding="utf-8") as f:
         for line in f:
             example = json.loads(line)
+            if "originals" in example:
+                example = example["originals"]
             examples.append(example[key])
     
     return examples
@@ -101,6 +128,12 @@ def initialize_argparse():
                         required=True,
                         nargs="+",
                         help="REQUIRED: the name of / path to the references file. OPTIONAL: the key to the references (defaults to 'output').")
+    parser.add_argument("-o",
+                        "--originals",
+                        type=str,
+                        required=False,
+                        nargs="+",
+                        help="The name of / path to the originals file. REQUIRED: if originals is given, the key is required.")
     parser.add_argument("-m",
                         "--metrics",
                         choices=["cer", "wer", "character", "all"],
@@ -112,6 +145,10 @@ def initialize_argparse():
                         required=False,
                         action='store_true',
                         help="Use casefolding (aggresive lowercasing) for text before evaluation. Not used by default.")
+    parser.add_argument("--modernize",
+                        default=False,
+                        action='store_true',
+                        help="Modernize the text before evaluation (replace w with v).")
     return parser.parse_args()
 
 def main():
@@ -122,9 +159,24 @@ def main():
     references = read_jsonl(args.references)
     assert len(predictions) == len(references)
 
-    scores = calculate_metrics(predictions=predictions, references=references, metric=args.metrics, lowercase=args.lower)
+    if args.originals:
+        originals = read_jsonl(args.originals)
+        assert len(predictions) == len(originals)
+    else:
+        originals = None
+
+    print(f"Unicode NFKC normalization: True")
+    print(f"Lowercase: {args.lower}")
+    print(f"Modernize (w --> v): {args.modernize}")
+
+    scores = calculate_metrics(predictions=predictions, references=references, originals=originals, metric=args.metrics, lowercase=args.lower, modernize=args.modernize)
     print(f"Number of examples: {len(predictions)}")
     print(scores)
+
+    if originals:
+        print("\nScores for original OCR (original vs. reference):")
+        scores = calculate_metrics(predictions=originals, references=references, originals=None, metric=args.metrics, lowercase=args.lower, modernize=args.modernize)
+        print(scores)
 
 if __name__ == "__main__":
     main()
