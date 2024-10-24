@@ -65,7 +65,10 @@ def calculate_metrics(*, predictions, references, originals=None, metric="cer", 
             improvements = []
             pred_scores = all_document_scores[metric_name]
             for pred_d, orig_d in zip(pred_scores, orig_scores):
-                impv = (orig_d - pred_d) / orig_d
+                if orig_d == 0:
+                    impv = pred_d
+                else:
+                    impv = (orig_d - pred_d) / orig_d
                 impv = min(max(impv, -1), 1) # cut to -1, 1
                 improvements.append(impv)
             scores["improvement"][metric_name]["mean"] = np.mean(improvements)
