@@ -1,0 +1,45 @@
+#!/bin/bash
+
+mkdir -p eo_quantization
+
+for i in  "meta-llama/Meta-Llama-3.1-70B-Instruct" "google/gemma-2-9b-it" "google/gemma-2-27b-it"
+do
+    for j in "/scratch/project_2005072/cassandra/ocr-postcorrection-data/English/SEGMENTED_DOCUMENTS/en_dev_sample200.jsonl.gz" "/scratch/project_2005072/cassandra/ocr-postcorrection-data/Finnish/FULL_DOCUMENTS/ABBYY_old/Batched/fin_dev_sample200.jsonl.gz"
+    do
+        if [[ $j == *"English"* ]]; then
+            lang="en"
+        elif [[ $j == *"Finnish"* ]]; then
+            lang="fi"
+        fi
+
+        for quant in "fp16" 
+        do
+             mem_per_cpu=20
+
+            case $quant in
+                "q4_0"|"q4_1") mem_per_cpu=40 ;;
+                "q5_0"|"q5_1"|"q5_K_M"|"q5_K_S") mem_per_cpu=90 ;;  
+                "q3_K_M"|"q3_K_S"|"q3_K_L") mem_per_cpu=60 ;; 
+                "q2_K") mem_per_cpu=40 ;;  
+                "fp16") mem_per_cpu=132 ;; 
+                "q6_K") mem_per_cpu=132 ;; 
+                "q8_0") mem_per_cpu=132 ;; #quick large guess on memory needed.. probably overdone
+                *) mem_per_cpu=80
+            esac
+            
+            num_gpus=$((mem_per_cpu / 32))    
+            if (( num_gpus < 1 )); then
+                num_gpus=1
+            elif (( num_gpus > 4 )); then
+                num_gpus=4
+            fi
+
+            sbatch --job-name dev_${i}${quant}_${lang} \
+                   --mem-per-cpu=${mem_per_cpu}G \
+                   --gres=gpu:v100:${num_gpus} \
+                   -e eo_quantization/${i}${quant}_${lang}_dev.err \
+                   -o eo_quantization/${i}${quant}_${lang}_dev.out \
+                   quantization.script $i $j $quant $lang
+        done
+    done
+done
