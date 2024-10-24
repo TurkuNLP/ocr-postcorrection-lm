@@ -1,0 +1,3 @@
+mkdir -p eo_o1query
+
+sbatch -e eo_o1query/fi.err -o eo_o1query/fi.out job.script

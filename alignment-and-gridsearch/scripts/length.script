@@ -1,0 +1,48 @@
+#!/bin/bash
+#SBATCH --account=project_2005072
+#SBATCH --partition=gpu
+
+module load pytorch
+
+source /scratch/project_2005072/cassandra/.venv/bin/activate
+
+export OLLAMA_MODELS=/scratch/project_2005072/cassandra/.cache/
+export TMPDIR=/scratch/project_2005072/cassandra/.tmp/
+export OLLAMA_KEEP_ALIVE=180m
+
+echo $SLURM_JOB_ID
+
+/scratch/project_2005072/cassandra/ollama-test/bin/ollama serve&
+
+sleep 30
+
+if [ "$3" == "fin" ]; then
+    temperature=0.14
+    top_k=30
+    top_p=0.60
+elif [ "$3" == "en" ]; then
+    temperature=0.26
+    top_k=65
+    top_p=0.66
+else
+    echo "Unknown language option: $3"
+    exit 1
+fi
+
+input_file="/scratch/project_2005072/jenna/ocr-correction/data_share/segment_length_experiment/$3_dev_$2.jsonl.gz"
+output_file="../length_output/$1_$2_$3NOTFINISHED.jsonl"
+
+if [ -f "$output_file" ]; then
+    output_lines=$(wc -l < "$output_file")
+else
+    output_lines=0
+fi
+
+echo "Output file has $output_lines lines. Will resume from line $((output_lines + 1)) of the input file."
+
+zcat "$input_file" | tail -n +$((output_lines + 1)) | \
+python3.9 ../produce_correction.py --model "$1" --input_file /dev/stdin --output_file "$output_file" --temperature "$temperature" --top_k "$top_k" --top_p "$top_p"
+
+# Log job efficiency data
+seff $SLURM_JOB_ID
+

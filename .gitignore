@@ -1,6 +1,11 @@
 __pycache__/
 .ipynb_checkpoints/
+.cache/
 alignment-and-gridsearch/scripts/.ipynb_checkpoints/
-alignment-and-gridsearch/scripts/eo_gridsearch/
-alignment-and-gridsearch/scripts/*.jsonl
+alignment-and-gridsearch/scripts/*.sh
+alignment-and-gridsearch/scripts/*.txt
+alignment-and-gridsearch/scripts/*/
+alignment-and-gridsearch/*output/
+evaluation/scripts/eo*/
+evaluation/scripts/*.jsonl
 trashbin/

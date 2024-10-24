@@ -1,0 +1,12 @@
+#!/bin/bash
+
+source /scratch/project_2005072/cassandra/.venv/bin/activate
+
+export OLLAMA_MODELS=/scratch/project_2005072/cassandra/.cache/
+export TMPDIR=/scratch/project_2005072/cassandra/.cache/
+
+/scratch/project_2005072/cassandra/ollama-test/bin/ollama serve&
+
+python3.9 ../evaluation.py --output_file script_test.jsonl  --language en --temperature 0.03 --pp_degree 3 --window_size 3200
+
+#kill %1
