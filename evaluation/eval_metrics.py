@@ -53,9 +53,11 @@ def calculate_metrics(*, predictions, references, originals=None, metric="cer", 
     if originals:
         # calculate improvements
         scores["improvement"] = {}
+        # weights for each document, calculated by using the ocr_doc / total_ocr_docs
+        total_ocr_chars = sum([len(p) for p in predictions])
+        weights = [len(p)/total_ocr_chars for p in predictions]
         for metric_name, metric_obj in metrics:
             scores["improvement"][metric_name] = {}
-
             orig_scores = []
             for o, r in zip(originals, references):
                 s = metric_obj.compute(predictions=[o], references=[r])
@@ -69,10 +71,11 @@ def calculate_metrics(*, predictions, references, originals=None, metric="cer", 
                     impv = pred_d
                 else:
                     impv = (orig_d - pred_d) / orig_d
-                impv = min(max(impv, -1), 1) # cut to -1, 1
+                #impv = min(max(impv, -1), 1) # cut to -1, 1
                 improvements.append(impv)
             scores["improvement"][metric_name]["mean"] = np.mean(improvements)
             scores["improvement"][metric_name]["median"] = np.median(improvements)
+            scores["improvement"][metric_name]["weighted average"] = np.average(improvements, weights=weights)
 
     
     return scores
