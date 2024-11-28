@@ -1,9 +1,9 @@
 # Changes in eval_metrics.py compared to the main branch
 
 - doesn't load the metric `character`
-- option to remove newline characters from the texts
-- option to not normalize the texts
-- return not only the micro/mean/median scores, but also the scores for individual scores
+- option to remove newline characters from the texts (only in `calculate_metrics()`, not as command line flag)
+- option to not normalize the texts (only in `calculate_metrics()`, not as command line flag)
+- return not only the micro/mean/median scores, but also the scores for individual documents
 
 # eval_metrics.py usage
 
