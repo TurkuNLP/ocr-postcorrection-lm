@@ -5,7 +5,10 @@ import json
 import numpy as np
 
 
-def normalize(text: str, lowercase=False, modernize=False):
+def normalize(text: str, lowercase=False, modernize=False, remove_newlines=False):
+    if remove_newlines:
+        text = (text.replace("-\n", "-")).replace("\n", " ")
+
     if modernize:
         text = text.replace("w", "v").replace("W", "V")
 
@@ -14,12 +17,13 @@ def normalize(text: str, lowercase=False, modernize=False):
 
     return unicodedata.normalize("NFKC", text)
 
-def calculate_metrics(*, predictions, references, originals=None, metric="cer", lowercase=False, modernize=False):
+def calculate_metrics(*, predictions, references, originals=None, metric="cer", lowercase=False, modernize=False, do_normalize=True, remove_newlines=False):
 
-    references = [normalize(r, lowercase, modernize) for r in references]
-    predictions = [normalize(p, lowercase, modernize) for p in predictions]
-    if originals:
-        originals = [normalize(o, lowercase, modernize) for o in originals]
+    if do_normalize: 
+        references = [normalize(r, lowercase, modernize, remove_newlines) for r in references]
+        predictions = [normalize(p, lowercase, modernize, remove_newlines) for p in predictions]
+        if originals:
+            originals = [normalize(o, lowercase, modernize, remove_newlines) for o in originals]
 
     scores = {"micro": {}, "mean": {}, "median": {}}
     all_document_scores = {}
@@ -33,7 +37,8 @@ def calculate_metrics(*, predictions, references, originals=None, metric="cer", 
     elif metric == "character":
         metrics.append(("character", load("character")))
     elif metric == "all":
-        metrics = [("cer", load("cer")), ("wer", load("wer")), ("character", load("character"))]
+        metrics = [("cer", load("cer")), ("wer", load("wer"))]
+        #metrics = [("cer", load("cer")), ("wer", load("wer")), ("character", load("character"))]
     else:
         assert False, "Unknown metric."
 
@@ -48,9 +53,11 @@ def calculate_metrics(*, predictions, references, originals=None, metric="cer", 
         scores["mean"][metric_name] = np.mean(document_scores)
         scores["median"][metric_name] = np.median(document_scores)
         all_document_scores[metric_name] = document_scores
-
+    
+        scores["individual"] = all_document_scores
 
     if originals:
+        scores["original"] = {}
         # calculate improvements
         scores["improvement"] = {}
         # weights for each document, calculated by using the ocr_doc / total_ocr_docs
@@ -76,8 +83,8 @@ def calculate_metrics(*, predictions, references, originals=None, metric="cer", 
             scores["improvement"][metric_name]["mean"] = np.mean(improvements)
             scores["improvement"][metric_name]["median"] = np.median(improvements)
             scores["improvement"][metric_name]["weighted average"] = np.average(improvements, weights=weights)
-
-    
+            scores["improvement"][metric_name]["individual"] = improvements
+            scores["original"][metric_name] = orig_scores
     return scores
 
 def evaluate(*, p_args, r_args, metric='cer', lowercase=False, modernize=False):
