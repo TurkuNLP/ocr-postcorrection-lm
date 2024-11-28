@@ -1,3 +1,10 @@
+# Changes in eval_metrics.py compared to the main branch
+
+- doesn't load the metric `character`
+- option to remove newline characters from the texts
+- option to not normalize the texts
+- return not only the micro/mean/median scores, but also the scores for individual scores
+
 # eval_metrics.py usage
 
 For evaluating the similarity of two texts or collections of text. Can be used from the command line or as a function call.
