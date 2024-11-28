@@ -1,6 +1,5 @@
 #!/bin/bash
 #SBATCH --account=project_2005072
-#SBATCH --time=02:30:00
 #SBATCH --partition=gpu
 
 module load pytorch
@@ -9,7 +8,7 @@ source /scratch/project_2005072/cassandra/.venv/bin/activate
 
 export OLLAMA_MODELS=/scratch/project_2005072/cassandra/.cache/
 export TMPDIR=/scratch/project_2005072/cassandra/.tmp/
-export OLLAMA_KEEP_ALIVE=120m
+export OLLAMA_KEEP_ALIVE=360m
 
 echo $SLURM_JOB_ID
 
@@ -29,6 +28,18 @@ else
     echo "Unknown language option: $4"
     exit 1
 fi
-python3.9 ../produce_correction.py --model $1 --input_file $2 --output_file ../quantization_output/$1$3_$4_test.jsonl --quantization "$3" --temperature $temperature --top_k $top_k --top_p $top_p
+
+input_file="$2"
+output_file="../quantization_output/$1$3_$4_test.jsonl"
+if [ -f "$output_file" ]; then
+    output_lines=$(wc -l < "$output_file")
+else
+    output_lines=0
+fi
+
+echo "Output file has $output_lines lines. Will resume from line $((output_lines + 1)) of the input file."
+
+cat "$input_file" | tail -n +$((output_lines + 1)) | \
+python3.9 ../produce_correction_single.py --model $1 --input_file /dev/stdin --output_file "$output_file" --quantization "$3" --temperature $temperature --top_k $top_k --top_p $top_p
 
 seff $SLURM_JOB_ID
