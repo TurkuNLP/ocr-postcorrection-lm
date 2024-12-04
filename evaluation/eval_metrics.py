@@ -26,7 +26,7 @@ def calculate_metrics(*, predictions, references, originals=None, metric="cer", 
         originals = [normalize(o, lowercase, modernize) for o in originals]
         
 
-    scores = {"micro": {}, "mean": {}, "median": {}}
+    scores = {"micro": {}, "mean": {}, "median": {}, "weighted average": {}}
     all_document_scores = {}
 
     # init metrics
@@ -63,8 +63,9 @@ def calculate_metrics(*, predictions, references, originals=None, metric="cer", 
             if metric_name == "character":
                 s = s["cer_score"]
             document_scores.append(s)
-        scores["mean"][metric_name] = np.average(document_scores, weights=weights[metric_name])
+        scores["mean"][metric_name] = np.average(document_scores)
         scores["median"][metric_name] = np.median(document_scores)
+        scores["weighted average"][metric_name] = np.average(document_scores, weights=weights[metric_name])
         all_document_scores[metric_name] = document_scores
 
 
