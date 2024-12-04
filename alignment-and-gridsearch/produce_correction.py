@@ -3,11 +3,7 @@ import argparse
 import sys
 import gzip
 import datetime as dt
-import csv
 from transformers import AutoTokenizer
-
-sys.path.append('/scratch/project_2005072/cassandra/ocr-postcorrection-lm/evaluation')
-from eval_metrics import calculate_metrics
 
 sys.path.append('/scratch/project_2005072/cassandra/ocr-postcorrection-lm/alignment-and-gridsearch')
 import alignment.utils as astral
@@ -69,30 +65,33 @@ def main(args):
 
             book = json.loads(line)
             timer_start=dt.datetime.now()
-            corrected_text, corrected_text_not_aligned = corrector.correct_document(book["input"], model=args.model, tokenizer=tokenizer,
+
+            document=[book["input_1"], book["input_2"]]  #for final experiment
+            
+            corrected_text, corrected_text_not_aligned = corrector.correct_document(document, model=args.model, tokenizer=tokenizer,
                                                         model_options=model_options,
                                                         text_options=text_options, 
                                                         aligner_options=aligner_options, 
+                                                        quantization=args.quantization,
                                                         pp_degree=args.pp_degree)
             timer_total = round((dt.datetime.now()-timer_start).total_seconds(), 1)
             
-            with open( "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/alignment-and-gridsearch/output_evaluation/"+args.output_file, "at" ) as f:
-                normalized_text = astral.suppress_format(book["input"])
-                normalized_response = astral.suppress_format(corrected_text_not_aligned[0])
+            with open( "/scratch/project_2005072/cassandra/ocr-postcorrection-lm/alignment-and-gridsearch/scripts/"+args.output_file, "at" ) as f:
                 
-                alignment, alignment_array = astral.align(normalized_text["text"], normalized_response["text"])
-                alignment_string = astral.craft_alignment_string(alignment)
-                
-                json_content = {"alignments":{"aligned_ocr" : alignment[0], 
-                                              "aligned_correction" : alignment[1] ,
-                                              "alignment_string": alignment_string},
-                               "originals": { "input": book["input"], 
-                                            "output":book["output"],
-                                            "model_correction_not_aligned": corrected_text_not_aligned[0], 
-                                            "model_correction_aligned": corrected_text}, 
+                json_content = {         "originals": { "input_1": book["input_1"], 
+                                             "input_2": book["input_2"], 
+                                            "output_1": book["output_1"],
+                                            "output_2": book["output_2"],
+                                            "model_correction_not_aligned": {"1": corrected_text_not_aligned[0], 
+                                                                             "2": corrected_text_not_aligned[1] } , 
+                                             "model_correction_aligned": {"1": corrected_text[0], 
+                                                                             "2": corrected_text[1] } , 
+                                            "model_correction_aligned_joined": ' '.join(corrected_text) }, 
                                 "time_taken": timer_total
                                }                   
                 print(json.dumps(json_content), file=f)
 
 if __name__ == "__main__":
     main(args)
+
+

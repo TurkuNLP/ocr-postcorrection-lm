@@ -2,7 +2,7 @@
 
 mkdir -p eo_len
 
-for i in "mistralai/Mixtral-8x7B-Instruct-v0.1" #"google/gemma-2-27b-it" "mistralai/Mixtral-8x7B-Instruct-v0.1" "meta-llama/Meta-Llama-3.1-8B-Instruct" "meta-llama/Meta-Llama-3-8B-Instruct" "google/gemma-2-9b-it"
+for i in "mistralai/Mixtral-8x7B-Instruct-v0.1"  #"google/gemma-2-27b-it" "mistralai/Mixtral-8x7B-Instruct-v0.1" "meta-llama/Meta-Llama-3.1-8B-Instruct" "meta-llama/Meta-Llama-3-8B-Instruct" "google/gemma-2-9b-it"
 do
     for j in 100 #100 200 300
     do
@@ -16,8 +16,8 @@ do
 
             hours=4
             case $i in
-                "meta-llama/Meta-Llama-3.1-70B-Instruct"|"mistralai/Mixtral-8x7B-Instruct-v0.1") mem_per_cpu=90; hours=4;;
-                "google/gemma-2-27b-it") mem_per_cpu=40; hours=4;;  
+                "meta-llama/Meta-Llama-3.1-70B-Instruct"|"mistralai/Mixtral-8x7B-Instruct-v0.1") mem_per_cpu=90; hours=3;;
+                "google/gemma-2-27b-it") mem_per_cpu=50; hours=4;;  
                 *) mem_per_cpu=20
             esac
             
