@@ -3,11 +3,14 @@ import unicodedata
 import argparse
 import json
 import numpy as np
-
+import re
 
 def normalize(text: str, lowercase=False, modernize=False):
     if modernize:
         text = text.replace("w", "v").replace("W", "V")
+    
+    # normalize spacing
+    text = re.sub(r"\s+", " ", text)
 
     if lowercase:
         return unicodedata.normalize("NFKC", text.casefold())
@@ -18,8 +21,10 @@ def calculate_metrics(*, predictions, references, originals=None, metric="cer", 
 
     references = [normalize(r, lowercase, modernize) for r in references]
     predictions = [normalize(p, lowercase, modernize) for p in predictions]
+
     if originals:
         originals = [normalize(o, lowercase, modernize) for o in originals]
+        
 
     scores = {"micro": {}, "mean": {}, "median": {}}
     all_document_scores = {}
@@ -37,6 +42,19 @@ def calculate_metrics(*, predictions, references, originals=None, metric="cer", 
     else:
         assert False, "Unknown metric."
 
+    weights = {}
+    for metric_name, metric_obj in metrics:
+        if metric_name == "cer":
+            total_ocr_chars = sum([len(p) for p in predictions])
+            cer_weights = [len(p)/total_ocr_chars for p in predictions]
+            weights[metric_name] = cer_weights
+        elif metric_name == "wer":
+            total_ocr_words = sum([len(p.split()) for p in predictions])
+            wer_weights = [len(p.split())/total_ocr_words for p in predictions]
+            weights[metric_name] = wer_weights
+        else:
+            pass
+
     for metric_name, metric_obj in metrics:
         scores["micro"][metric_name] = metric_obj.compute(predictions=predictions, references=references)
         document_scores = []
@@ -45,7 +63,7 @@ def calculate_metrics(*, predictions, references, originals=None, metric="cer", 
             if metric_name == "character":
                 s = s["cer_score"]
             document_scores.append(s)
-        scores["mean"][metric_name] = np.mean(document_scores)
+        scores["mean"][metric_name] = np.average(document_scores, weights=weights[metric_name])
         scores["median"][metric_name] = np.median(document_scores)
         all_document_scores[metric_name] = document_scores
 
@@ -53,9 +71,6 @@ def calculate_metrics(*, predictions, references, originals=None, metric="cer", 
     if originals:
         # calculate improvements
         scores["improvement"] = {}
-        # weights for each document, calculated by using the ocr_doc / total_ocr_docs
-        total_ocr_chars = sum([len(p) for p in predictions])
-        weights = [len(p)/total_ocr_chars for p in predictions]
         for metric_name, metric_obj in metrics:
             scores["improvement"][metric_name] = {}
             orig_scores = []
@@ -66,16 +81,20 @@ def calculate_metrics(*, predictions, references, originals=None, metric="cer", 
                 orig_scores.append(s)
             improvements = []
             pred_scores = all_document_scores[metric_name]
+            i = 1
             for pred_d, orig_d in zip(pred_scores, orig_scores):
                 if orig_d == 0:
-                    impv = pred_d
+                    print(f"Warning! Original {metric_name} is 0.0, new {metric_name} is {pred_d}.")
+                    impv = -pred_d
                 else:
                     impv = (orig_d - pred_d) / orig_d
                 #impv = min(max(impv, -1), 1) # cut to -1, 1
                 improvements.append(impv)
+                #print(i, "Original:", orig_d, "Predicted:", pred_d, "Improvement:", impv)
+                i += 1
             scores["improvement"][metric_name]["mean"] = np.mean(improvements)
             scores["improvement"][metric_name]["median"] = np.median(improvements)
-            scores["improvement"][metric_name]["weighted average"] = np.average(improvements, weights=weights)
+            scores["improvement"][metric_name]["weighted average"] = np.average(improvements, weights=weights[metric_name])
 
     
     return scores
@@ -172,6 +191,7 @@ def main():
         originals = None
 
     print(f"Unicode NFKC normalization: True")
+    print("Normalize sapces: True")
     print(f"Lowercase: {args.lower}")
     print(f"Modernize (w --> v): {args.modernize}")
 
