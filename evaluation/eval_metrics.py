@@ -89,7 +89,7 @@ def calculate_metrics(*, predictions, references, originals=None, metric="cer", 
                     impv = -pred_d
                 else:
                     impv = (orig_d - pred_d) / orig_d
-                #impv = min(max(impv, -1), 1) # cut to -1, 1
+                impv = min(max(impv, -1), 1) # cut to -1, 1
                 improvements.append(impv)
                 #print(i, "Original:", orig_d, "Predicted:", pred_d, "Improvement:", impv)
                 i += 1
